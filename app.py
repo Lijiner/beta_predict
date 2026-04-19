@@ -9,7 +9,9 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import os
-
+st.write(f"当前运行目录 (CWD): {os.getcwd()}")
+files_in_dir = os.listdir('.')
+st.write(f"当前目录下的文件: {files_in_dir}")
 # 页面配置
 st.set_page_config(
     page_title="结果可视化分析",
