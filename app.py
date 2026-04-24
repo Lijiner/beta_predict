@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 # 页面配置
 st.set_page_config(
     page_title="结果可视化分析",
-    page_icon="🎯",
     layout="wide"
 )
 
@@ -78,7 +77,7 @@ with left_col:
         unsafe_allow_html=True
     )
 
-    analyze = st.button("🚀 分析模型结果")
+    analyze = st.button("分析模型结果")
 
 # --------------------------
 # 右侧：结果展示
@@ -129,8 +128,27 @@ with right_col:
 
                 g1, g2 = st.columns(2)
 
-                # 1. 均值仪表盘
+                # 1. 正值计数仪表盘
                 with g1:
+                    fig_count = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=pos_ratio * 100,
+                        number={"font": {"size": 36}, "suffix": "%"},
+                        title={"text": "大于0的预测值占比"},
+                        gauge={
+                            "axis": {"range": [0, 100]},
+                            "bar": {"color": "#059669"},  # 绿色
+                            "bgcolor": "white",
+                            "steps": [{"range": [0, 100], "color": "#f0fdf4"}]
+                        }
+                    ))
+                    fig_count.update_layout(height=300, margin=dict(t=50, b=20, l=20, r=20))
+                    st.plotly_chart(fig_count, use_container_width=True)
+
+                # 2. 均值表盘
+                with g2:
+
+
                     gauge_min = min(0, min(all_results) * 1.1) if min(all_results) < 0 else 0
                     gauge_max = max(all_results) * 1.1 if max(all_results) != 0 else 1
 
@@ -148,27 +166,10 @@ with right_col:
                     fig_mean.update_layout(height=300, margin=dict(t=50, b=20, l=20, r=20))
                     st.plotly_chart(fig_mean, use_container_width=True)
 
-                # 2. 正值计数仪表盘
-                with g2:
-                    fig_count = go.Figure(go.Indicator(
-                        mode="gauge+number",
-                        value=pos_ratio * 100,
-                        number={"font": {"size": 36}, "suffix": "%"},
-                        title={"text": "大于0的预测值占比"},
-                        gauge={
-                            "axis": {"range": [0, 100]},
-                            "bar": {"color": "#059669"},  # 绿色
-                            "bgcolor": "white",
-                            "steps": [{"range": [0, 100], "color": "#f0fdf4"}]
-                        }
-                    ))
-                    fig_count.update_layout(height=300, margin=dict(t=50, b=20, l=20, r=20))
-                    st.plotly_chart(fig_count, use_container_width=True)
-
                 # 展示大于0的数量
-                st.markdown(f"### 🚀 大于0的预测值数量：{positive_count} / {count}")
-                st.markdown(f"### 🎯 大于0占比：{pos_ratio * 100:.2f}%")
-            
+                st.markdown(f"#### 大于0的预测值数量：{positive_count} / {count}")
+                st.markdown(f"#### 大于0占比：{pos_ratio * 100:.2f}%")
+
 st.markdown("---")
 st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>模型结果可视化分析平台 | Streamlit + Plotly</div>",
             unsafe_allow_html=True)
