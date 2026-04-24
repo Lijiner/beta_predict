@@ -165,6 +165,10 @@ with right_col:
                     fig_count.update_layout(height=300, margin=dict(t=50, b=20, l=20, r=20))
                     st.plotly_chart(fig_count, use_container_width=True)
 
+                # 展示大于0的数量
+                st.markdown(f"### 🚀 大于0的预测值数量：{positive_count} / {count}")
+                st.markdown(f"### 🎯 大于0占比：{pos_ratio * 100:.2f}%")
+            
 st.markdown("---")
 st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>模型结果可视化分析平台 | Streamlit + Plotly</div>",
             unsafe_allow_html=True)
