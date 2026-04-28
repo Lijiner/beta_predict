@@ -538,7 +538,7 @@ st.markdown("""
     <div class="features-header-icon">🔧</div>
     <div>
         <div class="features-header-text">Feature Configuration</div>
-        <div class="features-header-desc">Click any feature below to toggle its value</div>
+        <div class="features-header-desc">select a value for each feature</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -637,7 +637,7 @@ feat_values = [str(st.session_state[f"feature_{i}"]) for i in range(1, 16)]
 st.markdown(
     f"""<div class="action-bar">
         <div class="combo-display">
-            <span class="combo-label">Current Combination</span>
+            <span class="combo-label">Current feature Combination</span>
             <span class="combo-value">[{', '.join(feat_values)}]</span>
         </div>
     </div>""",
@@ -646,7 +646,7 @@ st.markdown(
 
 btn_col1, btn_col2, btn_col3 = st.columns([1, 0.35, 1])
 with btn_col2:
-    analyze = st.button("▶ START", use_container_width=True)
+    analyze = st.button("START", use_container_width=True)
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
@@ -713,9 +713,9 @@ if analyze:
         with g1:
             empty_gauge_card("Delay Change", "Mean delay per section", "📊", "#dbeafe", "gauge-gray", "empty_gauge_1")
         with g2:
-            empty_gauge_card("Improvement", "Probability of better punctuality", "📈", "#d1fae5", "gauge-gray", "empty_gauge_2")
+            empty_gauge_card("Harm", "Predicted probability that override harms train punctuality", "🌟", "#d1fae5", "gauge-gray", "empty_gauge_2")
         with g3:
-            empty_gauge_card("Harm", "Probability of worse punctuality", "📉", "#fee2e2", "gauge-gray", "empty_gauge_3")
+            empty_gauge_card("Improve", "Predicted probability that override improves train punctuality", "💥", "#fee2e2", "gauge-gray", "empty_gauge_3")
 
         st.markdown('<div class="result-banner result-infeasible">⚠️ Infeasible Feature Combination</div>', unsafe_allow_html=True)
 
@@ -781,11 +781,11 @@ if analyze:
 
                 g1, g2, g3 = st.columns(3)
                 with g1:
-                    draw_gauge_card("Delay Change", "Mean delay per section if overridden", mean_val, min(0, np.min(all_results)), np.max(all_results), "#2563eb", "📊", "#dbeafe", "gauge-blue", "gauge_mean", False)
+                    draw_gauge_card("Mean", "Per train section dredicted change in train defay if overridden", str(mean_val)+"seconds", min(0, np.min(all_results)), np.max(all_results), "#2563eb", "📊", "#dbeafe", "gauge-blue", "gauge_mean", False)
                 with g2:
-                    draw_gauge_card("Improvement", "Probability of better punctuality", pos_ratio * 100, 0, 100, "#059669", "📈", "#d1fae5", "gauge-green", "gauge_pos", True)
+                    draw_gauge_card("Harm", "Predicted probability that override harms train punctuality", pos_ratio * 100, 0, 100, "#059669", "🌟", "#d1fae5", "gauge-green", "gauge_pos", True)
                 with g3:
-                    draw_gauge_card("Harm", "Probability of worse punctuality", neg_ratio * 100, 0, 100, "#dc2626", "📉", "#fee2e2", "gauge-red", "gauge_neg", True)
+                    draw_gauge_card("Improve", "Predicted probability that override improves train punctuality", neg_ratio * 100, 0, 100, "#dc2626", "💥", "#fee2e2", "gauge-red", "gauge_neg", True)
 
                 st.markdown('<div class="result-banner result-feasible">✅ Feasible Feature Combination</div>', unsafe_allow_html=True)
 
