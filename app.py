@@ -5,206 +5,28 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-# ======================
 # 页面配置
-# ======================
 st.set_page_config(
     page_title="The Prototyped Decision Support System",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
-# ======================
-# 样式（排版优化）
-# ======================
+# 自定义样式
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
-/* ===== 标题区域 ===== */
-.title-wrapper {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
-    padding: 40px 20px 30px 20px;
-    border-radius: 16px;
-    margin-bottom: 28px;
-    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.25);
-    position: relative;
-    overflow: hidden;
-}
-
-.title-wrapper::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #06b6d4, #3b82f6);
-}
-
-.main-title {
-    font-size: 2.8rem;
-    font-weight: 800;
-    text-align: center;
-    color: #ffffff;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-.sub-title {
-    font-size: 1.1rem;
-    text-align: center;
-    color: #94a3b8;
-    font-weight: 400;
-    letter-spacing: 0.5px;
-}
-
-/* ===== 区块样式 ===== */
-.section-block {
-    background: #ffffff;
-    padding: 18px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.feature-label {
-    text-align: center;
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: #1e293b;
-    margin-bottom: 4px;
-}
-
-.combo-box {
-    background: #f0f9ff;
-    border-left: 5px solid #0ea5e9;
-    padding: 14px;
-    border-radius: 8px;
-    margin-top: 14px;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.08);
-}
-
-/* ===== 仪表盘卡片 ===== */
-.gauge-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 20px 24px 10px 24px;
-    margin-bottom: 20px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.gauge-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-}
-
-.gauge-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #f1f5f9;
-}
-
-.gauge-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    font-size: 1.1rem;
-}
-
-.gauge-title-text {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.gauge-subtitle {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-top: 2px;
-}
-
-/* ===== 结果状态 ===== */
-.result-banner {
-    text-align: center;
-    font-weight: 800;
-    font-size: 1.3rem;
-    padding: 16px;
-    border-radius: 12px;
-    margin-top: 10px;
-    letter-spacing: 0.3px;
-}
-
-.result-feasible {
-    background: #ecfdf5;
-    color: #047857;
-    border: 2px solid #6ee7b7;
-}
-
-.result-infeasible {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 2px solid #fca5a5;
-}
-
-/* ===== 按钮 ===== */
-.stButton > button {
-    width: 100%;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-    color: white !important;
-    font-weight: 700 !important;
-    font-size: 1.1rem !important;
-    padding: 14px !important;
-    border-radius: 10px !important;
-    border: none !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
-    transition: all 0.2s ease !important;
-}
-
-.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
-}
-
-/* ===== Footer ===== */
-.footer-text {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 0.9rem;
-    padding: 20px;
-    margin-top: 10px;
-}
+    .main-title { font-size: 2.2rem; font-weight: bold; color: #1f2937; text-align: center; }
+    .sub-title { font-size: 1.1rem; color: #6b7280; text-align: center; margin-bottom: 2rem; }
+    .stButton>button { width: 100%; height: 2.8rem; background: #3b82f6; color: white; font-weight: 600; border-radius: 8px; border: none; }
+    .stButton>button:hover { background: #2563eb; }
 </style>
 """, unsafe_allow_html=True)
 
-# ======================
-# 标题区域
-# ======================
-st.markdown("""
-<div class="title-wrapper">
-    <div class="main-title">The Prototyped Decision Support System</div>
-    <div class="sub-title">Train Delay Override Analysis &amp; Punctuality Prediction Dashboard</div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="main-title">The Prototyped Decision Support System</div>', unsafe_allow_html=True)
 
-# ======================
-# 数据加载
-# ======================
+
+# --------------------------
+# 后台加载数据
+# --------------------------
 @st.cache_data
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -212,19 +34,15 @@ def load_data():
     df_results = pd.read_csv(os.path.join(base_dir, "beta_merged_processed_0418.csv"))
     return df_features, df_results
 
+
 df_features, df_results = load_data()
 
-# ======================
-# 左右布局
-# ======================
+# --------------------------
+# 左侧：特征选择
+# --------------------------
 left_col, right_col = st.columns([0.45, 2.55])
 
-# ======================
-# 左侧：特征选择
-# ======================
 with left_col:
-
-    st.markdown('<div class="section-block">', unsafe_allow_html=True)
     st.markdown("### Select a value for each feature")
 
     selected_features = {}
@@ -236,7 +54,7 @@ with left_col:
             if feat_num <= 15:
                 with cols[col_idx]:
                     st.markdown(
-                        f"<div class='feature-label'>F{feat_num}</div>",
+                        f"<p style='text-align:center; font-weight:600; color:#374151; margin-bottom:2px; font-size:0.75rem;'>F{feat_num}</p>",
                         unsafe_allow_html=True
                     )
                     selected_features[f"feature_{feat_num}"] = st.radio(
@@ -248,29 +66,28 @@ with left_col:
                         key=f"select_{feat_num}"
                     )
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # 当前组合
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
-
     st.markdown(
-        f"""<div class="combo-box">
-            <div style="color:#475569; margin-bottom:4px; font-weight:600;">Current Feature Combination</div>
-            <div style="font-family:'SF Mono', monospace; font-weight:700; color:#0f172a; font-size:0.95rem;">[{', '.join(feat_values)}]</div>
+        f"""<div style="background:#eff6ff; border-left:4px solid #3b82f6; padding:10px; border-radius:6px; margin-top:12px;">
+            <div style="font-size:0.8rem; color:#6b7280; margin-bottom:2px;">Current feature combination </div>
+            <div style="font-family:monospace; font-weight:600; color:#1f2937; font-size:0.85rem;">[{', '.join(feat_values)}]</div>
         </div>""",
         unsafe_allow_html=True
     )
 
-    analyze = st.button("▶ START ANALYSIS", use_container_width=True)
+    analyze = st.button("START")
 
-# ======================
-# 右侧：结果展示（仪表盘每行一个）
-# ======================
+# --------------------------
+# 右侧：结果展示
+# --------------------------
 with right_col:
-
     if analyze:
 
+        # ======================
+        # Step 1: 可行性规则判断
+        # ======================
         f = selected_features
+
         infeasible = False
 
         if f["feature_2"] == 1 and f["feature_3"] != 1:
@@ -291,64 +108,46 @@ with right_col:
             infeasible = True
 
         # ======================
-        # 不可行
+        # Step 2: 如果不可行
         # ======================
         if infeasible:
+            g1, g2, g3 = st.columns(3)
 
-            def empty_gauge_card(title, subtitle, icon, icon_bg):
+            def empty_gauge(title):
                 fig = go.Figure(go.Indicator(
                     mode="gauge+number",
                     value=0,
-                    number={"font": {"size": 32, "color": "#94a3b8"}},
-                    title={"text": ""},
+                    number={"font": {"size": 24}},
+                    title={"text": title},
                     gauge={
-                        "axis": {"range": [0, 100], "tickcolor": "#cbd5e1"},
-                        "bar": {"color": "#cbd5e1"},
-                        "bgcolor": "#f8fafc",
-                        "bordercolor": "#e2e8f0"
+                        "axis": {"range": [0, 100]},
+                        "bar": {"color": "#9ca3af"}
                     }
                 ))
-                fig.update_layout(
-                    height=280,
-                    margin=dict(l=40, r=40, t=20, b=20),
-                    paper_bgcolor="rgba(0,0,0,0)"
-                )
-                st.markdown(f"""
-                <div class="gauge-card">
-                    <div class="gauge-header">
-                        <div class="gauge-icon" style="background:{icon_bg};">{icon}</div>
-                        <div>
-                            <div class="gauge-title-text">{title}</div>
-                            <div class="gauge-subtitle">{subtitle}</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.plotly_chart(fig, use_container_width=True)
+                fig.update_layout(height=260)
+                return fig
 
-            empty_gauge_card(
-                "Predicted Change in Train Delay",
-                "Mean delay variation per section if overridden",
-                "📊", "#dbeafe"
-            )
-            empty_gauge_card(
-                "Improvement Probability",
-                "Predicted probability that override improves punctuality",
-                "📈", "#d1fae5"
-            )
-            empty_gauge_card(
-                "Harm Probability",
-                "Predicted probability that override harms punctuality",
-                "📉", "#fee2e2"
-            )
+            with g1:
+                st.plotly_chart(empty_gauge("均值"), use_container_width=True)
 
+            with g2:
+                st.plotly_chart(empty_gauge(">0 占比"), use_container_width=True)
+
+            with g3:
+                st.plotly_chart(empty_gauge("<0 占比"), use_container_width=True)
+
+            # 红色提示（居中）
             st.markdown(
-                '<div class="result-banner result-infeasible">⚠️ Infeasible Feature Combination</div>',
+                """
+                <div style="text-align:center; color:red; font-weight:700; font-size:1.2rem; margin-top:20px;">
+                Infeasible Feature Combination
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
         # ======================
-        # 可行
+        # Step 3: 可行情况
         # ======================
         else:
 
@@ -373,85 +172,113 @@ with right_col:
                 else:
                     all_results = np.array(all_results)
 
+                    # ======================
+                    # 统计
+                    # ======================
                     mean_val = float(np.mean(all_results))
                     count = len(all_results)
+
                     pos_ratio = np.sum(all_results > 0) / count
                     neg_ratio = np.sum(all_results < 0) / count
 
-                    def draw_gauge_card(title, subtitle, value, min_val, max_val, color, icon, icon_bg, is_percent=False):
+                    # ======================
+                    # 仪表盘函数（字体缩小）
+                    # ======================
+                    def draw_gauge(title, value, min_val, max_val, color, is_percent=False):
                         fig = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=value,
-                            number={"font": {"size": 36, "color": color, "weight": "bold"}, "suffix": "%" if is_percent else ""},
-                            title={"text": ""},
+                            number={
+                                "font": {"size": 24},  # ⭐缩小
+                                "suffix": "%" if is_percent else ""
+                            },
+                            title={"text": title},
                             gauge={
-                                "axis": {"range": [min_val, max_val], "tickcolor": "#94a3b8"},
-                                "bar": {"color": color, "thickness": 0.75},
-                                "bgcolor": "#f1f5f9",
-                                "bordercolor": "#e2e8f0",
-                                "threshold": {
-                                    "line": {"color": "#1e293b", "width": 3},
-                                    "thickness": 0.8,
-                                    "value": value
-                                }
+                                "axis": {"range": [min_val, max_val]},
+                                "bar": {"color": color},
+                                "bgcolor": "white"
                             }
                         ))
-                        fig.update_layout(
-                            height=300,
-                            margin=dict(l=40, r=40, t=20, b=20),
-                            paper_bgcolor="rgba(0,0,0,0)"
+                        fig.update_layout(height=260)
+                        return fig
+
+                    g1, g2, g3 = st.columns(3)
+
+                    # ======================
+                    # 均值仪表盘
+                    # ======================
+                    with g1:
+                        st.markdown(
+                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
+                            "Predicted change in train delay per section if overridden"
+                            "</div>",
+                            unsafe_allow_html=True
                         )
-                        st.markdown(f"""
-                        <div class="gauge-card">
-                            <div class="gauge-header">
-                                <div class="gauge-icon" style="background:{icon_bg};">{icon}</div>
-                                <div>
-                                    <div class="gauge-title-text">{title}</div>
-                                    <div class="gauge-subtitle">{subtitle}</div>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        st.plotly_chart(fig, use_container_width=True)
+                    
+                        st.plotly_chart(
+                            draw_gauge(
+                                "Mean",
+                                mean_val,
+                                min(0, np.min(all_results)),
+                                np.max(all_results),
+                                "#3b82f6"
+                            ),
+                            use_container_width=True
+                        )
+                    
+                    # ======================
+                    # >0 占比
+                    # ======================
+                    with g2:
+                        st.markdown(
+                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
+                            "Predicted probability that override improves train punctuality"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                        st.plotly_chart(
+                            draw_gauge(
+                                ">0 Ratio",
+                                pos_ratio * 100,
+                                0, 100,
+                                "#059669",
+                                True
+                            ),
+                            use_container_width=True
+                        )
+                    
+                    # ======================
+                    # <0 占比
+                    # ======================
+                    with g3:
+                        st.markdown(
+                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
+                            "Predicted probability that override harms train punctuality"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                        st.plotly_chart(
+                            draw_gauge(
+                                "<0 Ratio",
+                                neg_ratio * 100,
+                                0, 100,
+                                "#dc2626",
+                                True
+                            ),
+                            use_container_width=True
+                        )
 
-                    # Gauge 1: Mean
-                    draw_gauge_card(
-                        "Predicted Change in Train Delay",
-                        "Mean delay variation per section if overridden",
-                        mean_val,
-                        min(0, np.min(all_results)),
-                        np.max(all_results),
-                        "#2563eb",
-                        "📊", "#dbeafe",
-                        False
-                    )
-
-                    # Gauge 2: Positive Ratio
-                    draw_gauge_card(
-                        "Improvement Probability",
-                        "Predicted probability that override improves train punctuality",
-                        pos_ratio * 100,
-                        0, 100,
-                        "#059669",
-                        "📈", "#d1fae5",
-                        True
-                    )
-
-                    # Gauge 3: Negative Ratio
-                    draw_gauge_card(
-                        "Harm Probability",
-                        "Predicted probability that override harms train punctuality",
-                        neg_ratio * 100,
-                        0, 100,
-                        "#dc2626",
-                        "📉", "#fee2e2",
-                        True
-                    )
-
+                    # 居中提示（在所有仪表盘下面）
                     st.markdown(
-                        '<div class="result-banner result-feasible">✅ Feasible Feature Combination</div>',
+                        """
+                        <div style="text-align:center; color:#059669; font-weight:700; font-size:1.1rem; margin-top:20px;">
+                        ✅ Feasible Feature Combination
+                        </div>
+                        """,
                         unsafe_allow_html=True
                     )
-
-# Footer
-st.markdown("<div class='footer-text'>The Prototyped Decision Support System</div>", unsafe_allow_html=True)
+st.markdown("---")
+st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>The Prototyped Decision Support System</div>",
+            unsafe_allow_html=True)
