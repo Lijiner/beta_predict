@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 # 页面配置
 st.set_page_config(
-    page_title="结果可视化分析",
+    page_title="The Prototyped Decision Support System",
     layout="wide"
 )
 
@@ -44,8 +44,7 @@ df_features, df_results = load_data()
 left_col, right_col = st.columns([0.45, 2.55])
 
 with left_col:
-    st.markdown("### 🔧 特征选择")
-    st.caption("为每个特征选择 0 或 1")
+    st.markdown("### Select a value for each feature")
 
     selected_features = {}
 
@@ -71,105 +70,216 @@ with left_col:
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
     st.markdown(
         f"""<div style="background:#eff6ff; border-left:4px solid #3b82f6; padding:10px; border-radius:6px; margin-top:12px;">
-            <div style="font-size:0.8rem; color:#6b7280; margin-bottom:2px;">当前特征组合</div>
+            <div style="font-size:0.8rem; color:#6b7280; margin-bottom:2px;">Current feature combination </div>
             <div style="font-family:monospace; font-weight:600; color:#1f2937; font-size:0.85rem;">[{', '.join(feat_values)}]</div>
         </div>""",
         unsafe_allow_html=True
     )
 
-    analyze = st.button("分析模型结果")
+    analyze = st.button("START")
 
 # --------------------------
 # 右侧：结果展示
 # --------------------------
 with right_col:
     if analyze:
-        match_mask = pd.Series([True] * len(df_features))
-        for feat_name, feat_val in selected_features.items():
-            match_mask = match_mask & (df_features[feat_name] == feat_val)
 
-        matched_ids = df_features.loc[match_mask, "id"].values
+        # ======================
+        # Step 1: 可行性规则判断
+        # ======================
+        f = selected_features
 
-        if len(matched_ids) == 0:
-            st.error("❌ 未找到完全匹配的特征组合")
-            feature_cols = [f"feature_{i}" for i in range(1, 16)]
-            sel_vec = np.array([selected_features[c] for c in feature_cols])
-            hamming_dist = np.sum(np.abs(df_features[feature_cols].values - sel_vec), axis=1)
-            df_temp = df_features.copy()
-            df_temp["差异数"] = hamming_dist
-            nearest = df_temp.nsmallest(5, "差异数")[["id"] + feature_cols + ["差异数"]]
-            st.dataframe(nearest.reset_index(drop=True), use_container_width=True)
+        infeasible = False
 
+        if f["feature_2"] == 1 and f["feature_3"] != 1:
+            infeasible = True
+        if f["feature_4"] == 1 and (f["feature_5"] == 1 or f["feature_6"] != 1):
+            infeasible = True
+        if f["feature_5"] == 1 and f["feature_6"] != 1:
+            infeasible = True
+        if f["feature_7"] == 1 and f["feature_8"] != 1:
+            infeasible = True
+        if f["feature_9"] == 1 and f["feature_10"] != 1:
+            infeasible = True
+        if f["feature_11"] == 1 and (f["feature_12"] == 1 or f["feature_13"] != 1 or f["feature_14"] == 1):
+            infeasible = True
+        if f["feature_12"] == 1 and (f["feature_13"] == 1 or f["feature_14"] != 1):
+            infeasible = True
+        if f["feature_13"] == 1 and f["feature_14"] != 1:
+            infeasible = True
+
+        # ======================
+        # Step 2: 如果不可行
+        # ======================
+        if infeasible:
+            g1, g2, g3 = st.columns(3)
+
+            def empty_gauge(title):
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=0,
+                    number={"font": {"size": 24}},
+                    title={"text": title},
+                    gauge={
+                        "axis": {"range": [0, 100]},
+                        "bar": {"color": "#9ca3af"}
+                    }
+                ))
+                fig.update_layout(height=260)
+                return fig
+
+            with g1:
+                st.plotly_chart(empty_gauge("均值"), use_container_width=True)
+
+            with g2:
+                st.plotly_chart(empty_gauge(">0 占比"), use_container_width=True)
+
+            with g3:
+                st.plotly_chart(empty_gauge("<0 占比"), use_container_width=True)
+
+            # 红色提示（居中）
+            st.markdown(
+                """
+                <div style="text-align:center; color:red; font-weight:700; font-size:1.2rem; margin-top:20px;">
+                Infeasible Feature Combination
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # ======================
+        # Step 3: 可行情况
+        # ======================
         else:
-            all_results = []
-            for mid in matched_ids:
-                if mid in df_results["id"].values:
-                    row_vals = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
-                    all_results.extend(row_vals)
 
-            if len(all_results) == 0:
-                st.error("❌ 特征匹配成功，但未找到对应的模型结果数据")
+            match_mask = pd.Series([True] * len(df_features))
+            for feat_name, feat_val in selected_features.items():
+                match_mask = match_mask & (df_features[feat_name] == feat_val)
+
+            matched_ids = df_features.loc[match_mask, "id"].values
+
+            if len(matched_ids) == 0:
+                st.error("❌ 未找到完全匹配的特征组合")
             else:
-                all_results = np.array(all_results)
+                all_results = []
 
-                # ======================
-                # 核心统计
-                # ======================
-                mean_val = float(np.mean(all_results))
-                positive_count = int(np.sum(all_results > 0))
-                count = len(all_results)
+                for mid in matched_ids:
+                    if mid in df_results["id"].values:
+                        row_vals = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
+                        all_results.extend(row_vals)
 
-                pos_ratio = positive_count / count if count > 0 else 0
+                if len(all_results) == 0:
+                    st.error("❌ 未找到模型结果")
+                else:
+                    all_results = np.array(all_results)
 
-                # ======================
-                # 第一行：仪表盘（均值 + >0占比）
-                # ======================
-                st.markdown("### 🎯 模型分析仪表盘")
+                    # ======================
+                    # 统计
+                    # ======================
+                    mean_val = float(np.mean(all_results))
+                    count = len(all_results)
 
-                g1, g2 = st.columns(2)
+                    pos_ratio = np.sum(all_results > 0) / count
+                    neg_ratio = np.sum(all_results < 0) / count
 
-                # 1. 正值计数仪表盘
-                with g1:
-                    fig_count = go.Figure(go.Indicator(
-                        mode="gauge+number",
-                        value=pos_ratio * 100,
-                        number={"font": {"size": 36}, "suffix": "%"},
-                        title={"text": "大于0的预测值占比"},
-                        gauge={
-                            "axis": {"range": [0, 100]},
-                            "bar": {"color": "#059669"},  # 绿色
-                            "bgcolor": "white",
-                            "steps": [{"range": [0, 100], "color": "#f0fdf4"}]
-                        }
-                    ))
-                    fig_count.update_layout(height=300, margin=dict(t=50, b=20, l=20, r=20))
-                    st.plotly_chart(fig_count, use_container_width=True)
+                    # ======================
+                    # 仪表盘函数（字体缩小）
+                    # ======================
+                    def draw_gauge(title, value, min_val, max_val, color, is_percent=False):
+                        fig = go.Figure(go.Indicator(
+                            mode="gauge+number",
+                            value=value,
+                            number={
+                                "font": {"size": 24},  # ⭐缩小
+                                "suffix": "%" if is_percent else ""
+                            },
+                            title={"text": title},
+                            gauge={
+                                "axis": {"range": [min_val, max_val]},
+                                "bar": {"color": color},
+                                "bgcolor": "white"
+                            }
+                        ))
+                        fig.update_layout(height=260)
+                        return fig
 
-                # 2. 均值表盘
-                with g2:
+                    g1, g2, g3 = st.columns(3)
 
+                    # ======================
+                    # 均值仪表盘
+                    # ======================
+                    with g1:
+                        st.markdown(
+                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
+                            "Predicted change in train delay per section if overridden"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                        st.plotly_chart(
+                            draw_gauge(
+                                "Mean",
+                                mean_val,
+                                min(0, np.min(all_results)),
+                                np.max(all_results),
+                                "#3b82f6"
+                            ),
+                            use_container_width=True
+                        )
+                    
+                    # ======================
+                    # >0 占比
+                    # ======================
+                    with g2:
+                        st.markdown(
+                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
+                            "Predicted probability that override improves train punctuality"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                        st.plotly_chart(
+                            draw_gauge(
+                                ">0 Ratio",
+                                pos_ratio * 100,
+                                0, 100,
+                                "#059669",
+                                True
+                            ),
+                            use_container_width=True
+                        )
+                    
+                    # ======================
+                    # <0 占比
+                    # ======================
+                    with g3:
+                        st.markdown(
+                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
+                            "Predicted probability that override harms train punctuality"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                        st.plotly_chart(
+                            draw_gauge(
+                                "<0 Ratio",
+                                neg_ratio * 100,
+                                0, 100,
+                                "#dc2626",
+                                True
+                            ),
+                            use_container_width=True
+                        )
 
-                    gauge_min = min(0, min(all_results) * 1.1) if min(all_results) < 0 else 0
-                    gauge_max = max(all_results) * 1.1 if max(all_results) != 0 else 1
-
-                    fig_mean = go.Figure(go.Indicator(
-                        mode="gauge+number",
-                        value=mean_val,
-                        number={"font": {"size": 36}, "valueformat": ".2f"},
-                        title={"text": "预测结果均值"},
-                        gauge={
-                            "axis": {"range": [gauge_min, gauge_max]},
-                            "bar": {"color": "#3b82f6"},
-                            "bgcolor": "white"
-                        }
-                    ))
-                    fig_mean.update_layout(height=300, margin=dict(t=50, b=20, l=20, r=20))
-                    st.plotly_chart(fig_mean, use_container_width=True)
-
-                # 展示大于0的数量
-                st.markdown(f"#### 大于0的预测值数量：{positive_count} / {count}")
-                st.markdown(f"#### 大于0占比：{pos_ratio * 100:.2f}%")
-
+                    # 居中提示（在所有仪表盘下面）
+                    st.markdown(
+                        """
+                        <div style="text-align:center; color:#059669; font-weight:700; font-size:1.1rem; margin-top:20px;">
+                        ✅ Feasible Feature Combination
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 st.markdown("---")
-st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>模型结果可视化分析平台 | Streamlit + Plotly</div>",
+st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>The Prototyped Decision Support System</div>",
             unsafe_allow_html=True)
