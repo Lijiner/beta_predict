@@ -19,17 +19,114 @@ st.set_page_config(
 # ======================
 st.markdown("""
 <style>
-/* 这里你的CSS完全不动（已省略，原样保留即可） */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* ===== 标题区域 ===== */
+.title-wrapper {
+    background: linear-gradient(135deg, #0c1220 0%, #1a365d 40%, #0f172a 100%);
+    padding: 40px 20px 32px 20px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.title-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #8b5cf6, #3b82f6);
+    background-size: 300% 100%;
+    animation: gradientShift 4s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.main-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.sub-title {
+    font-size: 1.05rem;
+    text-align: center;
+    color: #94a3b8;
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ===== 特征区 ===== */
+.features-section {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    padding: 24px 28px 20px 28px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.features-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.features-header-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* ===== 按钮 ===== */
+.stButton > button {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8, #3730a3) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+}
+
+/* ===== 仪表盘 ===== */
+.gauges-container {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid #e2e8f0;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ======================
-# 标题区域
+# 标题
 # ======================
 st.markdown("""
 <div class="title-wrapper">
     <div class="main-title">The Prototyped Decision Support System</div>
-    <div class="sub-title">Train Delay Override Analysis &amp; Punctuality Prediction</div>
+    <div class="sub-title">Train Delay Override Analysis & Punctuality Prediction</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -46,7 +143,7 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 特征选择（已改：极简版，无卡片）
+# 特征选择（轻量版）
 # ======================
 st.markdown('<div class="features-section">', unsafe_allow_html=True)
 
@@ -54,81 +151,85 @@ st.markdown("""
 <div class="features-header">
     <div class="features-header-icon">🔧</div>
     <div>
-        <div class="features-header-text">Feature Configuration</div>
-        <div class="features-header-desc">select a value for each feature</div>
+        <div style="font-weight:700;">Feature Configuration</div>
+        <div style="font-size:0.8rem;color:#64748b;">select a value for each feature</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 初始化特征值
+# 初始化
 for i in range(1, 16):
-    key = f"feature_{i}"
-    if key not in st.session_state:
-        st.session_state[key] = 0
+    k = f"feature_{i}"
+    if k not in st.session_state:
+        st.session_state[k] = 0
 
-def set_feature(feat_num, value):
-    st.session_state[f"feature_{feat_num}"] = value
+def set_feature(i, v):
+    st.session_state[f"feature_{i}"] = v
 
-# ===== 3×5 极简布局 =====
+# 3×5 网格
 rows = [st.columns(5) for _ in range(3)]
 
-feature_idx = 1
+idx = 1
 for r in range(3):
     for c in range(5):
-        if feature_idx > 15:
+        if idx > 15:
             break
 
         with rows[r][c]:
-            val = st.session_state[f"feature_{feature_idx}"]
+            val = st.session_state[f"feature_{idx}"]
 
-            # 仅保留编号（无卡片）
             st.markdown(
-                f"<div style='text-align:center; font-weight:700; color:#1e293b; margin-bottom:6px;'>F{feature_idx}</div>",
+                f"""
+                <div style="
+                    text-align:center;
+                    font-weight:700;
+                    color:#1e293b;
+                    margin-bottom:6px;
+                    padding:4px;
+                    border-radius:6px;
+                    background:{'#ecfdf5' if val==1 else '#f8fafc'};
+                    border:1px solid {'#10b981' if val==1 else '#e2e8f0'};
+                ">
+                F{idx}
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
-            # 0 / 1 按钮
             c1, c2 = st.columns(2)
 
             with c1:
-                if st.button("0", key=f"btn_f{feature_idx}_0", use_container_width=True):
-                    set_feature(feature_idx, 0)
+                if st.button("0", key=f"f{idx}_0", use_container_width=True):
+                    set_feature(idx, 0)
                     st.rerun()
 
             with c2:
-                if st.button("1", key=f"btn_f{feature_idx}_1", use_container_width=True):
-                    set_feature(feature_idx, 1)
+                if st.button("1", key=f"f{idx}_1", use_container_width=True):
+                    set_feature(idx, 1)
                     st.rerun()
 
-        feature_idx += 1
+        idx += 1
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================
-# 组合显示 + START 按钮
+# START + 组合
 # ======================
 feat_values = [str(st.session_state[f"feature_{i}"]) for i in range(1, 16)]
 
-st.markdown(
-    f"""<div class="action-bar">
-        <div class="combo-display">
-            <span class="combo-label">Current feature Combination</span>
-            <span class="combo-value">[{', '.join(feat_values)}]</span>
-        </div>
-    </div>""",
-    unsafe_allow_html=True
-)
+st.markdown(f"""
+<div style="background:#eff6ff;padding:12px;border-radius:12px;">
+Current feature Combination: [{', '.join(feat_values)}]
+</div>
+""", unsafe_allow_html=True)
 
-btn_col1, btn_col2, btn_col3 = st.columns([1, 0.35, 1])
-with btn_col2:
-    analyze = st.button("START", use_container_width=True)
-
-st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+analyze = st.button("START", use_container_width=True)
 
 # ======================
-# 仪表盘区域（完全不动）
+# 仪表盘（完整保留原逻辑）
 # ======================
 if analyze:
+
     selected_features = {f"feature_{i}": st.session_state[f"feature_{i}"] for i in range(1, 16)}
 
     f = selected_features
@@ -154,21 +255,20 @@ if analyze:
     st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
 
     if infeasible:
-        st.error("Infeasible Feature Combination")
+        st.error("⚠️ Infeasible Feature Combination")
+
     else:
-        st.success("Feasible Feature Combination")
+        st.success("✅ Feasible Feature Combination")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
 else:
     st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
     st.markdown("""
-    <div style="text-align:center; padding:60px 20px; color:#94a3b8;">
-        <div style="font-size:3rem; margin-bottom:16px;">📊</div>
-        <div style="font-size:1.2rem; font-weight:600; color:#475569; margin-bottom:8px;">Ready to Analyze</div>
-        <div style="font-size:0.95rem;">Select feature values above and click <b>START</b> to view results</div>
+    <div style="text-align:center;padding:60px;color:#94a3b8;">
+        📊 Ready to Analyze
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<div class='footer-text'>© The Prototyped Decision Support System</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#94a3b8;margin-top:20px;'>© The Prototyped Decision Support System</div>", unsafe_allow_html=True)
