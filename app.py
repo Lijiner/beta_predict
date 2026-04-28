@@ -549,86 +549,46 @@ for i in range(1, 16):
     if key not in st.session_state:
         st.session_state[key] = 0
 
-# 初始化当前选中的特征
-if "selected_feature" not in st.session_state:
-    st.session_state.selected_feature = None
-
-# 处理特征点击
-def select_feature(feat_num):
-    st.session_state.selected_feature = feat_num
-
-def toggle_feature(feat_num, value):
+def set_feature(feat_num, value):
     st.session_state[f"feature_{feat_num}"] = value
 
-# 一行显示15个特征卡片
+# 一行显示15个特征卡片，每个卡片直接包含 0/1 选择按钮
 cols = st.columns(15)
 for i in range(1, 16):
     with cols[i-1]:
         val = st.session_state[f"feature_{i}"]
-        is_selected = st.session_state.selected_feature == i
 
-        # 构建CSS类
+        # 卡片容器
         card_class = "feature-unit"
-        if is_selected:
-            card_class += " feature-unit-active"
         if val == 1:
             card_class += " feature-unit-selected"
 
-        value_class = "feature-value feature-value-on" if val == 1 else "feature-value feature-value-off"
+        value_class_on = "feature-value feature-value-on"
+        value_class_off = "feature-value feature-value-off"
         indicator_class = "feature-indicator indicator-on" if val == 1 else "feature-indicator indicator-off"
 
         st.markdown(f"""
-        <div class="{card_class}" onclick="">
+        <div class="{card_class}">
             <div class="feature-name">F{i}</div>
-            <div class="{value_class}">{val}</div>
+            <div class="{value_class_on if val == 1 else value_class_off}">{val}</div>
             <div class="{indicator_class}"></div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 使用button实现点击
-        if st.button(f"F{i}", key=f"btn_select_{i}", help=f"Click to configure Feature {i}", use_container_width=True):
-            select_feature(i)
-            st.rerun()
-
-# 选择面板 - 显示当前选中特征的配置选项
-if st.session_state.selected_feature is not None:
-    sf = st.session_state.selected_feature
-    current_val = st.session_state[f"feature_{sf}"]
-
-    st.markdown(f"""
-    <div class="selection-panel">
-        <div class="selection-panel-header">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <span class="selection-panel-badge">F{sf}</span>
-                <span class="selection-panel-title">Configure Feature {sf}</span>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    opt_col1, opt_col2, opt_col3 = st.columns([1, 1, 1])
-
-    with opt_col1:
-        pass
-    with opt_col2:
-        new_val = st.radio(
-            f"Select value for F{sf}",
-            options=[0, 1],
-            index=current_val,
-            horizontal=True,
-            label_visibility="collapsed",
-            key=f"radio_f{sf}"
-        )
-        if new_val != current_val:
-            toggle_feature(sf, new_val)
-            st.rerun()
-    with opt_col3:
-        pass
-
-    st.markdown('</div>', unsafe_allow_html=True)
+        # 直接显示 0 / 1 两个选择按钮
+        bcol1, bcol2 = st.columns(2)
+        with bcol1:
+            btn_type_0 = "primary" if val == 0 else "secondary"
+            if st.button("0", key=f"btn_f{i}_0", use_container_width=True, type=btn_type_0):
+                set_feature(i, 0)
+                st.rerun()
+        with bcol2:
+            btn_type_1 = "primary" if val == 1 else "secondary"
+            if st.button("1", key=f"btn_f{i}_1", use_container_width=True, type=btn_type_1):
+                set_feature(i, 1)
+                st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-
 # ======================
 # 组合显示 + START 按钮
 # ======================
