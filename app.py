@@ -73,67 +73,187 @@ html, body, [class*="css"] {
     text-transform: uppercase;
 }
 
-/* ===== 区块样式 ===== */
-.section-block {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 16px;
+/* ===== 特征选择区域 ===== */
+.features-section {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    padding: 28px 32px 20px 32px;
+    border-radius: 20px;
     border: 1px solid #e2e8f0;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
-.section-title {
+.features-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.features-header-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.features-header-text {
     font-size: 1.25rem;
     font-weight: 700;
     color: #1e293b;
-    margin-bottom: 16px;
+}
+
+.features-header-desc {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* 特征卡片 */
+.feature-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 8px 8px 8px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+    transform: translateY(-1px);
+}
+
+.feature-card-active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.feature-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+/* 覆盖 radio 样式 */
+.stRadio > div {
     display: flex;
-    align-items: center;
+    justify-content: center;
     gap: 8px;
 }
 
-.feature-label {
-    text-align: center;
-    font-weight: 700;
+.stRadio > div > label {
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-weight: 600;
     font-size: 0.85rem;
-    color: #334155;
-    margin-bottom: 6px;
-    background: #f8fafc;
-    padding: 4px 8px;
-    border-radius: 6px;
-    display: inline-block;
-    width: 100%;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 48px;
+    text-align: center;
 }
 
-.combo-box {
+.stRadio > div > label:hover {
+    background: #e0e7ff;
+    border-color: #818cf8;
+}
+
+.stRadio > div > label[data-baseweb="radio"] > div:first-child {
+    display: none;
+}
+
+/* 选中状态 */
+.stRadio > div > label[data-baseweb="radio"][aria-checked="true"] {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+
+/* ===== 组合显示 + 按钮 ===== */
+.action-bar {
     background: linear-gradient(135deg, #eff6ff, #f0f9ff);
-    border-left: 5px solid #3b82f6;
-    padding: 16px 20px;
-    border-radius: 12px;
-    margin-top: 16px;
-    font-size: 0.95rem;
-    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.1);
+    border: 1.5px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 20px;
+}
+
+.combo-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
 }
 
 .combo-label {
     color: #475569;
     font-weight: 600;
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .combo-value {
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-weight: 700;
     color: #1e40af;
-    font-size: 1rem;
+    font-size: 0.95rem;
     background: #ffffff;
-    padding: 6px 14px;
-    border-radius: 8px;
-    border: 1px solid #bfdbfe;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1.5px solid #bfdbfe;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    letter-spacing: 0.5px;
+}
+
+/* ===== 按钮 ===== */
+.stButton > button {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8, #3730a3) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    padding: 12px 32px !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
+    transition: all 0.3s ease !important;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(37, 99, 235, 0.5) !important;
+}
+
+/* ===== 分隔线 ===== */
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+    margin: 20px 0;
 }
 
 /* ===== 仪表盘区域 ===== */
@@ -230,32 +350,11 @@ html, body, [class*="css"] {
     border: 2px solid #fca5a5;
 }
 
-/* ===== 按钮 ===== */
-.stButton > button {
-    width: 100%;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8, #3730a3) !important;
-    color: white !important;
-    font-weight: 700 !important;
-    font-size: 1.15rem !important;
-    padding: 16px !important;
-    border-radius: 12px !important;
-    border: none !important;
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
-    transition: all 0.3s ease !important;
-    letter-spacing: 0.5px;
-}
-
-.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(37, 99, 235, 0.5) !important;
-}
-
-/* ===== 分隔线 ===== */
-.divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
-    margin: 24px 0;
-}
+/* ===== 仪表盘颜色条 ===== */
+.gauge-blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.gauge-green::before { background: linear-gradient(90deg, #059669, #34d399); }
+.gauge-red::before { background: linear-gradient(90deg, #dc2626, #f87171); }
+.gauge-gray::before { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
 
 /* ===== Footer ===== */
 .footer-text {
@@ -264,25 +363,6 @@ html, body, [class*="css"] {
     font-size: 0.85rem;
     padding: 24px;
     margin-top: 16px;
-}
-
-/* ===== 仪表盘颜色条 ===== */
-.gauge-blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-.gauge-green::before { background: linear-gradient(90deg, #059669, #34d399); }
-.gauge-red::before { background: linear-gradient(90deg, #dc2626, #f87171); }
-.gauge-gray::before { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
-
-/* ===== 提示信息 ===== */
-.info-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #f1f5f9;
-    color: #475569;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -310,10 +390,19 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 上部：特征选择
+# 特征选择
 # ======================
-st.markdown('<div class="section-block">', unsafe_allow_html=True)
-st.markdown('<div class="section-title">🔧 Select a value for each feature</div>', unsafe_allow_html=True)
+st.markdown('<div class="features-section">', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="features-header">
+    <div class="features-header-icon">🔧</div>
+    <div>
+        <div class="features-header-text">Feature Configuration</div>
+        <div class="features-header-desc">Toggle each feature value to define your scenario</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 selected_features = {}
 
@@ -324,7 +413,9 @@ for row in range(3):
         if feat_num <= 15:
             with cols[col_idx]:
                 st.markdown(
-                    f"<div class='feature-label'>F{feat_num}</div>",
+                    f"""<div class="feature-card">
+                        <div class="feature-badge">F{feat_num}</div>
+                    </div>""",
                     unsafe_allow_html=True
                 )
                 selected_features[f"feature_{feat_num}"] = st.radio(
@@ -338,27 +429,33 @@ for row in range(3):
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 当前组合 + START 按钮（并排）
+# ======================
+# 组合显示 + START 按钮
+# ======================
 feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
 
-combo_col, btn_col = st.columns([3, 1])
-
-with combo_col:
-    st.markdown(
-        f"""<div class="combo-box">
-            <span class="combo-label">Current Feature Combination</span>
+st.markdown(
+    f"""<div class="action-bar">
+        <div class="combo-display">
+            <span class="combo-label">Current Combination</span>
             <span class="combo-value">[{', '.join(feat_values)}]</span>
-        </div>""",
-        unsafe_allow_html=True
-    )
+        </div>
+        <div style="flex-shrink:0;">
+    </div>""",
+    unsafe_allow_html=True
+)
 
-with btn_col:
-    analyze = st.button("▶ START ANALYSIS", use_container_width=True)
+# 按钮需要单独放，不能嵌套在 markdown 里
+btn_col1, btn_col2, btn_col3 = st.columns([1, 0.4, 1])
+with btn_col2:
+    analyze = st.button("▶ START", use_container_width=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
 # ======================
-# 下部：结果展示（3个仪表盘横向排列）
+# 仪表盘区域
 # ======================
 if analyze:
 
@@ -567,13 +664,12 @@ if analyze:
     st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # 未点击时的占位提示
     st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
     st.markdown("""
     <div style="text-align:center; padding:60px 20px; color:#94a3b8;">
         <div style="font-size:3rem; margin-bottom:16px;">📊</div>
         <div style="font-size:1.2rem; font-weight:600; color:#475569; margin-bottom:8px;">Ready to Analyze</div>
-        <div style="font-size:0.95rem;">Select feature values above and click <b>START ANALYSIS</b> to view results</div>
+        <div style="font-size:0.95rem;">Select feature values above and click <b>START</b> to view results</div>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
