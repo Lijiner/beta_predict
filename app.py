@@ -5,54 +5,206 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-# =========================
+# ======================
 # 页面配置
-# =========================
+# ======================
 st.set_page_config(
     page_title="The Prototyped Decision Support System",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# =========================
-# 样式
-# =========================
+# ======================
+# 样式（排版优化）
+# ======================
 st.markdown("""
 <style>
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: bold;
-        color: #1f2937;
-        text-align: center;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-    .sub-title {
-        font-size: 1.1rem;
-        color: #6b7280;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
 
-    .stButton>button {
-        width: 100%;
-        height: 2.8rem;
-        background: #3b82f6;
-        color: white;
-        font-weight: 600;
-        border-radius: 8px;
-        border: none;
-    }
+/* ===== 标题区域 ===== */
+.title-wrapper {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+    padding: 40px 20px 30px 20px;
+    border-radius: 16px;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.25);
+    position: relative;
+    overflow: hidden;
+}
 
-    .stButton>button:hover {
-        background: #2563eb;
-    }
+.title-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #3b82f6);
+}
+
+.main-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.sub-title {
+    font-size: 1.1rem;
+    text-align: center;
+    color: #94a3b8;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* ===== 区块样式 ===== */
+.section-block {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.feature-label {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.combo-box {
+    background: #f0f9ff;
+    border-left: 5px solid #0ea5e9;
+    padding: 14px;
+    border-radius: 8px;
+    margin-top: 14px;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.08);
+}
+
+/* ===== 仪表盘卡片 ===== */
+.gauge-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px 24px 10px 24px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gauge-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.gauge-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.gauge-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+.gauge-title-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.gauge-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* ===== 结果状态 ===== */
+.result-banner {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.3rem;
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 10px;
+    letter-spacing: 0.3px;
+}
+
+.result-feasible {
+    background: #ecfdf5;
+    color: #047857;
+    border: 2px solid #6ee7b7;
+}
+
+.result-infeasible {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 2px solid #fca5a5;
+}
+
+/* ===== 按钮 ===== */
+.stButton > button {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    padding: 14px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+}
+
+/* ===== Footer ===== */
+.footer-text {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    padding: 20px;
+    margin-top: 10px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">The Prototyped Decision Support System</div>', unsafe_allow_html=True)
+# ======================
+# 标题区域
+# ======================
+st.markdown("""
+<div class="title-wrapper">
+    <div class="main-title">The Prototyped Decision Support System</div>
+    <div class="sub-title">Train Delay Override Analysis &amp; Punctuality Prediction Dashboard</div>
+</div>
+""", unsafe_allow_html=True)
 
-# =========================
+# ======================
 # 数据加载
-# =========================
+# ======================
 @st.cache_data
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -60,15 +212,19 @@ def load_data():
     df_results = pd.read_csv(os.path.join(base_dir, "beta_merged_processed_0418.csv"))
     return df_features, df_results
 
-
 df_features, df_results = load_data()
 
-# =========================
-# 左侧输入
-# =========================
+# ======================
+# 左右布局
+# ======================
 left_col, right_col = st.columns([0.45, 2.55])
 
+# ======================
+# 左侧：特征选择
+# ======================
 with left_col:
+
+    st.markdown('<div class="section-block">', unsafe_allow_html=True)
     st.markdown("### Select a value for each feature")
 
     selected_features = {}
@@ -80,7 +236,7 @@ with left_col:
             if feat_num <= 15:
                 with cols[col_idx]:
                     st.markdown(
-                        f"<p style='text-align:center; font-weight:600; font-size:0.75rem;'>F{feat_num}</p>",
+                        f"<div class='feature-label'>F{feat_num}</div>",
                         unsafe_allow_html=True
                     )
                     selected_features[f"feature_{feat_num}"] = st.radio(
@@ -92,57 +248,29 @@ with left_col:
                         key=f"select_{feat_num}"
                     )
 
-    analyze = st.button("START")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# =========================
-# 半圆仪表盘（核心）
-# =========================
-def draw_semi_gauge(title, value, min_val, max_val, color, is_percent=False):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=value,
-        number={
-            "font": {"size": 48},
-            "suffix": "%" if is_percent else ""
-        },
-        title={
-            "text": f"<b>{title}</b>",
-            "font": {"size": 20}
-        },
-        gauge={
-            "shape": "angular",
+    # 当前组合
+    feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
 
-            "axis": {
-                "range": [min_val, max_val]
-            },
-
-            "bar": {"color": color},
-
-            "steps": [
-                {"range": [min_val, (min_val + max_val) / 2], "color": "#e5e7eb"},
-                {"range": [(min_val + max_val) / 2, max_val], "color": "#f3f4f6"}
-            ]
-        }
-    ))
-
-    fig.update_layout(
-        height=380,
-        margin=dict(t=30, b=0, l=10, r=10)
+    st.markdown(
+        f"""<div class="combo-box">
+            <div style="color:#475569; margin-bottom:4px; font-weight:600;">Current Feature Combination</div>
+            <div style="font-family:'SF Mono', monospace; font-weight:700; color:#0f172a; font-size:0.95rem;">[{', '.join(feat_values)}]</div>
+        </div>""",
+        unsafe_allow_html=True
     )
 
-    return fig
+    analyze = st.button("▶ START ANALYSIS", use_container_width=True)
 
-# =========================
-# 右侧结果
-# =========================
+# ======================
+# 右侧：结果展示（仪表盘每行一个）
+# ======================
 with right_col:
+
     if analyze:
 
         f = selected_features
-
-        # =========================
-        # 可行性判断
-        # =========================
         infeasible = False
 
         if f["feature_2"] == 1 and f["feature_3"] != 1:
@@ -162,152 +290,174 @@ with right_col:
         if f["feature_13"] == 1 and f["feature_14"] != 1:
             infeasible = True
 
-        # =========================
+        # ======================
         # 不可行
-        # =========================
+        # ======================
         if infeasible:
-            g1, g2, g3 = st.columns(3)
 
-            def empty():
+            def empty_gauge_card(title, subtitle, icon, icon_bg, chart_key):
                 fig = go.Figure(go.Indicator(
                     mode="gauge+number",
                     value=0,
-                    number={"font": {"size": 40}},
-                    gauge={"axis": {"range": [0, 100]}}
+                    number={"font": {"size": 32, "color": "#94a3b8"}},
+                    title={"text": ""},
+                    gauge={
+                        "axis": {"range": [0, 100], "tickcolor": "#cbd5e1"},
+                        "bar": {"color": "#cbd5e1"},
+                        "bgcolor": "#f8fafc",
+                        "bordercolor": "#e2e8f0"
+                    }
                 ))
-                fig.update_layout(height=320)
-                return fig
+                fig.update_layout(
+                    height=280,
+                    margin=dict(l=40, r=40, t=20, b=20),
+                    paper_bgcolor="rgba(0,0,0,0)"
+                )
+                st.markdown(f"""
+                <div class="gauge-card">
+                    <div class="gauge-header">
+                        <div class="gauge-icon" style="background:{icon_bg};">{icon}</div>
+                        <div>
+                            <div class="gauge-title-text">{title}</div>
+                            <div class="gauge-subtitle">{subtitle}</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
-            with g1:
-                st.plotly_chart(empty(), use_container_width=True)
-            with g2:
-                st.plotly_chart(empty(), use_container_width=True)
-            with g3:
-                st.plotly_chart(empty(), use_container_width=True)
+            empty_gauge_card(
+                "Predicted Change in Train Delay",
+                "Mean delay variation per section if overridden",
+                "📊", "#dbeafe",
+                "empty_gauge_1"
+            )
+            empty_gauge_card(
+                "Improvement Probability",
+                "Predicted probability that override improves punctuality",
+                "📈", "#d1fae5",
+                "empty_gauge_2"
+            )
+            empty_gauge_card(
+                "Harm Probability",
+                "Predicted probability that override harms punctuality",
+                "📉", "#fee2e2",
+                "empty_gauge_3"
+            )
 
             st.markdown(
-                "<div style='text-align:center;color:red;font-size:1.2rem;font-weight:700;'>"
-                "Infeasible Feature Combination"
-                "</div>",
+                '<div class="result-banner result-infeasible">⚠️ Infeasible Feature Combination</div>',
                 unsafe_allow_html=True
             )
 
-        # =========================
-        # 可行情况
-        # =========================
+        # ======================
+        # 可行
+        # ======================
         else:
 
             match_mask = pd.Series([True] * len(df_features))
             for feat_name, feat_val in selected_features.items():
-                match_mask &= (df_features[feat_name] == feat_val)
+                match_mask = match_mask & (df_features[feat_name] == feat_val)
 
             matched_ids = df_features.loc[match_mask, "id"].values
 
-            all_results = []
+            if len(matched_ids) == 0:
+                st.error("❌ 未找到完全匹配的特征组合")
+            else:
+                all_results = []
 
-            for mid in matched_ids:
-                if mid in df_results["id"].values:
-                    row_vals = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
-                    all_results.extend(row_vals)
+                for mid in matched_ids:
+                    if mid in df_results["id"].values:
+                        row_vals = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
+                        all_results.extend(row_vals)
 
-            all_results = np.array(all_results)
+                if len(all_results) == 0:
+                    st.error("❌ 未找到模型结果")
+                else:
+                    all_results = np.array(all_results)
 
-            mean_val = float(np.mean(all_results))
-            pos_ratio = np.mean(all_results > 0)
-            neg_ratio = np.mean(all_results < 0)
+                    mean_val = float(np.mean(all_results))
+                    count = len(all_results)
+                    pos_ratio = np.sum(all_results > 0) / count
+                    neg_ratio = np.sum(all_results < 0) / count
 
-            # =========================
-            # 标题
-            # =========================
-            st.markdown("""
-            <div style='text-align:center;font-size:1.3rem;font-weight:700;color:#111827;margin-bottom:10px;'>
-                Decision Cockpit Dashboard
-            </div>
-            """, unsafe_allow_html=True)
+                    def draw_gauge_card(title, subtitle, value, min_val, max_val, color, icon, icon_bg, chart_key, is_percent=False):
+                        fig = go.Figure(go.Indicator(
+                            mode="gauge+number",
+                            value=value,
+                            number={"font": {"size": 36, "color": color, "weight": "bold"}, "suffix": "%" if is_percent else ""},
+                            title={"text": ""},
+                            gauge={
+                                "axis": {"range": [min_val, max_val], "tickcolor": "#94a3b8"},
+                                "bar": {"color": color, "thickness": 0.75},
+                                "bgcolor": "#f1f5f9",
+                                "bordercolor": "#e2e8f0",
+                                "threshold": {
+                                    "line": {"color": "#1e293b", "width": 3},
+                                    "thickness": 0.8,
+                                    "value": value
+                                }
+                            }
+                        ))
+                        fig.update_layout(
+                            height=300,
+                            margin=dict(l=40, r=40, t=20, b=20),
+                            paper_bgcolor="rgba(0,0,0,0)"
+                        )
+                        st.markdown(f"""
+                        <div class="gauge-card">
+                            <div class="gauge-header">
+                                <div class="gauge-icon" style="background:{icon_bg};">{icon}</div>
+                                <div>
+                                    <div class="gauge-title-text">{title}</div>
+                                    <div class="gauge-subtitle">{subtitle}</div>
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
-            # =========================
-            # 第一排：核心指标（半圆）
-            # =========================
-            st.markdown("""
-            <div style='text-align:center;font-size:1.05rem;font-weight:600;color:#374151;'>
-                System-Level Impact
-            </div>
-            """, unsafe_allow_html=True)
-
-            col_center = st.columns([1, 2, 1])[1]
-
-            with col_center:
-                st.plotly_chart(
-                    draw_semi_gauge(
-                        "Mean Delay Impact",
+                    # Gauge 1: Mean
+                    draw_gauge_card(
+                        "Predicted Change in Train Delay",
+                        "Mean delay variation per section if overridden",
                         mean_val,
                         min(0, np.min(all_results)),
                         np.max(all_results),
-                        "#3b82f6"
-                    ),
-                    use_container_width=True
-                )
+                        "#2563eb",
+                        "📊", "#dbeafe",
+                        "gauge_mean",
+                        False
+                    )
 
-            # =========================
-            # 第二排：风险拆解
-            # =========================
-            g1, g2 = st.columns(2)
-
-            with g1:
-                st.markdown("""
-                <div style='text-align:center;font-size:1rem;font-weight:600;'>
-                    Improvement Probability
-                </div>
-                """, unsafe_allow_html=True)
-
-                st.plotly_chart(
-                    draw_semi_gauge(
-                        "Improve %",
+                    # Gauge 2: Positive Ratio
+                    draw_gauge_card(
+                        "Improvement Probability",
+                        "Predicted probability that override improves train punctuality",
                         pos_ratio * 100,
                         0, 100,
                         "#059669",
+                        "📈", "#d1fae5",
+                        "gauge_pos",
                         True
-                    ),
-                    use_container_width=True
-                )
+                    )
 
-            with g2:
-                st.markdown("""
-                <div style='text-align:center;font-size:1rem;font-weight:600;'>
-                    Risk Probability
-                </div>
-                """, unsafe_allow_html=True)
-
-                st.plotly_chart(
-                    draw_semi_gauge(
-                        "Harm %",
+                    # Gauge 3: Negative Ratio
+                    draw_gauge_card(
+                        "Harm Probability",
+                        "Predicted probability that override harms train punctuality",
                         neg_ratio * 100,
                         0, 100,
                         "#dc2626",
+                        "📉", "#fee2e2",
+                        "gauge_neg",
                         True
-                    ),
-                    use_container_width=True
-                )
+                    )
 
-            # =========================
-            # 总结条
-            # =========================
-            st.markdown(f"""
-            <div style='text-align:center;margin-top:15px;font-size:1.05rem;color:#374151;'>
-                Mean: <b>{mean_val:.3f}</b> |
-                Improve: <b>{pos_ratio*100:.1f}%</b> |
-                Risk: <b>{neg_ratio*100:.1f}%</b>
-            </div>
-            """, unsafe_allow_html=True)
+                    st.markdown(
+                        '<div class="result-banner result-feasible">✅ Feasible Feature Combination</div>',
+                        unsafe_allow_html=True
+                    )
 
-            st.markdown("""
-            <div style='text-align:center;color:#059669;font-weight:700;font-size:1.1rem;margin-top:10px;'>
-                Feasible Feature Combination
-            </div>
-            """, unsafe_allow_html=True)
-
-st.markdown("---")
-st.markdown(
-    "<div style='text-align:center;color:#9ca3af;'>The Prototyped Decision Support System</div>",
-    unsafe_allow_html=True
-)
+# Footer
+st.markdown("<div class='footer-text'>The Prototyped Decision Support System</div>", unsafe_allow_html=True)
