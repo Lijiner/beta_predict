@@ -5,29 +5,80 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
+# ======================
 # 页面配置
+# ======================
 st.set_page_config(
     page_title="The Prototyped Decision Support System",
     layout="wide"
 )
 
-# 自定义样式
+# ======================
+# 样式（仅排版优化）
+# ======================
 st.markdown("""
 <style>
-    .main-title { font-size: 2.2rem; font-weight: bold; color: #1f2937; text-align: center; }
-    .sub-title { font-size: 1.1rem; color: #6b7280; text-align: center; margin-bottom: 2rem; }
-    .stButton>button { width: 100%; height: 2.8rem; background: #3b82f6; color: white; font-weight: 600; border-radius: 8px; border: none; }
-    .stButton>button:hover { background: #2563eb; }
+.main-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.3rem;
+}
+
+.sub-title {
+    font-size: 1rem;
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+}
+
+.section-block {
+    background: #ffffff;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 12px;
+}
+
+.feature-label {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #374151;
+    margin-bottom: 2px;
+}
+
+.combo-box {
+    background:#eff6ff;
+    border-left:4px solid #3b82f6;
+    padding:10px;
+    border-radius:6px;
+    margin-top:12px;
+    font-size:0.85rem;
+}
+
+.metric-title {
+    text-align:center;
+    font-size:0.9rem;
+    color:#374151;
+    margin-bottom:6px;
+}
+
+.result-text {
+    text-align:center;
+    font-weight:700;
+    font-size:1.1rem;
+    margin-top:18px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">🎯 模型结果可视化分析</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">选择15个特征值，查看1600个二叉树模型的预测结果分布</div>', unsafe_allow_html=True)
+# 标题
+st.markdown('<div class="main-title">The Prototyped Decision Support System</div>', unsafe_allow_html=True)
 
-
-# --------------------------
-# 后台加载数据
-# --------------------------
+# ======================
+# 数据加载
+# ======================
 @st.cache_data
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,15 +86,19 @@ def load_data():
     df_results = pd.read_csv(os.path.join(base_dir, "beta_merged_processed_0418.csv"))
     return df_features, df_results
 
-
 df_features, df_results = load_data()
 
-# --------------------------
-# 左侧：特征选择
-# --------------------------
+# ======================
+# 左右布局
+# ======================
 left_col, right_col = st.columns([0.45, 2.55])
 
+# ======================
+# 左侧：特征选择（排版优化）
+# ======================
 with left_col:
+
+    st.markdown('<div class="section-block">', unsafe_allow_html=True)
     st.markdown("### Select a value for each feature")
 
     selected_features = {}
@@ -55,7 +110,7 @@ with left_col:
             if feat_num <= 15:
                 with cols[col_idx]:
                     st.markdown(
-                        f"<p style='text-align:center; font-weight:600; color:#374151; margin-bottom:2px; font-size:0.75rem;'>F{feat_num}</p>",
+                        f"<div class='feature-label'>F{feat_num}</div>",
                         unsafe_allow_html=True
                     )
                     selected_features[f"feature_{feat_num}"] = st.radio(
@@ -67,28 +122,29 @@ with left_col:
                         key=f"select_{feat_num}"
                     )
 
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 当前组合
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
+
     st.markdown(
-        f"""<div style="background:#eff6ff; border-left:4px solid #3b82f6; padding:10px; border-radius:6px; margin-top:12px;">
-            <div style="font-size:0.8rem; color:#6b7280; margin-bottom:2px;">Current feature combination </div>
-            <div style="font-family:monospace; font-weight:600; color:#1f2937; font-size:0.85rem;">[{', '.join(feat_values)}]</div>
+        f"""<div class="combo-box">
+            <div style="color:#6b7280; margin-bottom:2px;">Current feature combination</div>
+            <div style="font-family:monospace; font-weight:600;">[{', '.join(feat_values)}]</div>
         </div>""",
         unsafe_allow_html=True
     )
 
     analyze = st.button("START")
 
-# --------------------------
-# 右侧：结果展示
-# --------------------------
+# ======================
+# 右侧：结果展示（排版优化）
+# ======================
 with right_col:
+
     if analyze:
 
-        # ======================
-        # Step 1: 可行性规则判断
-        # ======================
         f = selected_features
-
         infeasible = False
 
         if f["feature_2"] == 1 and f["feature_3"] != 1:
@@ -108,11 +164,12 @@ with right_col:
         if f["feature_13"] == 1 and f["feature_14"] != 1:
             infeasible = True
 
+        g1, g2, g3 = st.columns(3)
+
         # ======================
-        # Step 2: 如果不可行
+        # 不可行
         # ======================
         if infeasible:
-            g1, g2, g3 = st.columns(3)
 
             def empty_gauge(title):
                 fig = go.Figure(go.Indicator(
@@ -120,35 +177,30 @@ with right_col:
                     value=0,
                     number={"font": {"size": 24}},
                     title={"text": title},
-                    gauge={
-                        "axis": {"range": [0, 100]},
-                        "bar": {"color": "#9ca3af"}
-                    }
+                    gauge={"axis": {"range": [0, 100]}, "bar": {"color": "#9ca3af"}}
                 ))
                 fig.update_layout(height=260)
                 return fig
 
             with g1:
-                st.plotly_chart(empty_gauge("均值"), use_container_width=True)
+                st.markdown('<div class="metric-title">Mean</div>', unsafe_allow_html=True)
+                st.plotly_chart(empty_gauge(""), use_container_width=True)
 
             with g2:
-                st.plotly_chart(empty_gauge(">0 占比"), use_container_width=True)
+                st.markdown('<div class="metric-title">&gt;0 Ratio</div>', unsafe_allow_html=True)
+                st.plotly_chart(empty_gauge(""), use_container_width=True)
 
             with g3:
-                st.plotly_chart(empty_gauge("<0 占比"), use_container_width=True)
+                st.markdown('<div class="metric-title">&lt;0 Ratio</div>', unsafe_allow_html=True)
+                st.plotly_chart(empty_gauge(""), use_container_width=True)
 
-            # 红色提示（居中）
             st.markdown(
-                """
-                <div style="text-align:center; color:red; font-weight:700; font-size:1.2rem; margin-top:20px;">
-                Infeasible Feature Combination
-                </div>
-                """,
+                '<div class="result-text" style="color:red;">Infeasible Feature Combination</div>',
                 unsafe_allow_html=True
             )
 
         # ======================
-        # Step 3: 可行情况
+        # 可行
         # ======================
         else:
 
@@ -173,113 +225,39 @@ with right_col:
                 else:
                     all_results = np.array(all_results)
 
-                    # ======================
-                    # 统计
-                    # ======================
                     mean_val = float(np.mean(all_results))
                     count = len(all_results)
-
                     pos_ratio = np.sum(all_results > 0) / count
                     neg_ratio = np.sum(all_results < 0) / count
 
-                    # ======================
-                    # 仪表盘函数（字体缩小）
-                    # ======================
                     def draw_gauge(title, value, min_val, max_val, color, is_percent=False):
                         fig = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=value,
-                            number={
-                                "font": {"size": 24},  # ⭐缩小
-                                "suffix": "%" if is_percent else ""
-                            },
-                            title={"text": title},
-                            gauge={
-                                "axis": {"range": [min_val, max_val]},
-                                "bar": {"color": color},
-                                "bgcolor": "white"
-                            }
+                            number={"font": {"size": 24}, "suffix": "%" if is_percent else ""},
+                            title={"text": ""},
+                            gauge={"axis": {"range": [min_val, max_val]}, "bar": {"color": color}}
                         ))
                         fig.update_layout(height=260)
                         return fig
 
-                    g1, g2, g3 = st.columns(3)
-
-                    # ======================
-                    # 均值仪表盘
-                    # ======================
                     with g1:
-                        st.markdown(
-                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
-                            "Predicted change in train delay per section if overridden"
-                            "</div>",
-                            unsafe_allow_html=True
-                        )
-                    
-                        st.plotly_chart(
-                            draw_gauge(
-                                "Mean",
-                                mean_val,
-                                min(0, np.min(all_results)),
-                                np.max(all_results),
-                                "#3b82f6"
-                            ),
-                            use_container_width=True
-                        )
-                    
-                    # ======================
-                    # >0 占比
-                    # ======================
-                    with g2:
-                        st.markdown(
-                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
-                            "Predicted probability that override improves train punctuality"
-                            "</div>",
-                            unsafe_allow_html=True
-                        )
-                    
-                        st.plotly_chart(
-                            draw_gauge(
-                                ">0 Ratio",
-                                pos_ratio * 100,
-                                0, 100,
-                                "#059669",
-                                True
-                            ),
-                            use_container_width=True
-                        )
-                    
-                    # ======================
-                    # <0 占比
-                    # ======================
-                    with g3:
-                        st.markdown(
-                            "<div style='text-align:center; font-size:0.9rem; color:#374151; margin-bottom:6px;'>"
-                            "Predicted probability that override harms train punctuality"
-                            "</div>",
-                            unsafe_allow_html=True
-                        )
-                    
-                        st.plotly_chart(
-                            draw_gauge(
-                                "<0 Ratio",
-                                neg_ratio * 100,
-                                0, 100,
-                                "#dc2626",
-                                True
-                            ),
-                            use_container_width=True
-                        )
+                        st.markdown('<div class="metric-title">Predicted change in train delay per section if overridden</div>', unsafe_allow_html=True)
+                        st.plotly_chart(draw_gauge("", mean_val, min(0, np.min(all_results)), np.max(all_results), "#3b82f6"), use_container_width=True)
 
-                    # 居中提示（在所有仪表盘下面）
+                    with g2:
+                        st.markdown('<div class="metric-title">Predicted probability that override improves train punctuality</div>', unsafe_allow_html=True)
+                        st.plotly_chart(draw_gauge("", pos_ratio * 100, 0, 100, "#059669", True), use_container_width=True)
+
+                    with g3:
+                        st.markdown('<div class="metric-title">Predicted probability that override harms train punctuality</div>', unsafe_allow_html=True)
+                        st.plotly_chart(draw_gauge("", neg_ratio * 100, 0, 100, "#dc2626", True), use_container_width=True)
+
                     st.markdown(
-                        """
-                        <div style="text-align:center; color:#059669; font-weight:700; font-size:1.1rem; margin-top:20px;">
-                        ✅ Feasible Feature Combination
-                        </div>
-                        """,
+                        '<div class="result-text" style="color:#059669;">Feasible Feature Combination</div>',
                         unsafe_allow_html=True
                     )
+
+# Footer
 st.markdown("---")
-st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>The Prototyped Decision Support System</div>",
-            unsafe_allow_html=True)
+st.markdown("<div style='text-align:center; color:#9ca3af; font-size:0.9rem;'>The Prototyped Decision Support System</div>", unsafe_allow_html=True)
