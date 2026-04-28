@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # ======================
-# 样式（排版优化）
+# 样式
 # ======================
 st.markdown("""
 <style>
@@ -28,9 +28,9 @@ html, body, [class*="css"] {
 /* ===== 标题区域 ===== */
 .title-wrapper {
     background: linear-gradient(135deg, #0c1220 0%, #1a365d 40%, #0f172a 100%);
-    padding: 48px 20px 36px 20px;
+    padding: 40px 20px 32px 20px;
     border-radius: 20px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35);
     position: relative;
     overflow: hidden;
@@ -55,17 +55,17 @@ html, body, [class*="css"] {
 }
 
 .main-title {
-    font-size: 3.2rem;
+    font-size: 2.8rem;
     font-weight: 900;
     text-align: center;
     color: #ffffff;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     letter-spacing: -1px;
     text-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
 .sub-title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     text-align: center;
     color: #94a3b8;
     font-weight: 400;
@@ -76,7 +76,7 @@ html, body, [class*="css"] {
 /* ===== 特征选择区域 ===== */
 .features-section {
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    padding: 28px 32px 20px 32px;
+    padding: 24px 28px 20px 28px;
     border-radius: 20px;
     border: 1px solid #e2e8f0;
     margin-bottom: 20px;
@@ -87,106 +87,208 @@ html, body, [class*="css"] {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
     border-bottom: 2px solid #f1f5f9;
 }
 
 .features-header-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     color: white;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .features-header-text {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #1e293b;
 }
 
 .features-header-desc {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #64748b;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
-/* 特征卡片 */
-.feature-card {
+/* 特征行容器 */
+.features-row {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+/* 单个特征单元 */
+.feature-unit {
+    flex: 1;
+    min-width: 0;
     background: #ffffff;
-    border: 1.5px solid #e2e8f0;
+    border: 2px solid #e2e8f0;
     border-radius: 12px;
-    padding: 12px 8px 8px 8px;
+    padding: 10px 4px 8px 4px;
     text-align: center;
-    transition: all 0.2s ease;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-.feature-card:hover {
+.feature-unit:hover {
     border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
-    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
 }
 
-.feature-card-active {
+.feature-unit-active {
     border-color: #3b82f6;
     background: #eff6ff;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
-.feature-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #1e293b, #334155);
-    color: #ffffff;
+.feature-unit-selected {
+    border-color: #059669;
+    background: #ecfdf5;
+}
+
+.feature-unit-selected:hover {
+    border-color: #059669;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.feature-name {
+    font-size: 0.7rem;
     font-weight: 700;
-    font-size: 0.75rem;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 8px;
+    color: #475569;
+    margin-bottom: 6px;
     letter-spacing: 0.5px;
 }
 
-/* 覆盖 radio 样式 */
-.stRadio > div {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-}
-
-.stRadio > div > label {
-    background: #f1f5f9;
-    border: 2px solid #e2e8f0;
+.feature-value {
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
-    padding: 6px 16px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    min-width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin: 0 auto;
+}
+
+.feature-value-off {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 2px solid #e2e8f0;
+}
+
+.feature-value-on {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #ffffff;
+    border: 2px solid #059669;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* 选中指示器 */
+.feature-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin: 6px auto 0 auto;
+}
+
+.indicator-off {
+    background: #cbd5e1;
+}
+
+.indicator-on {
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+/* ===== 选择面板 ===== */
+.selection-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-top: 16px;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.selection-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.selection-panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.selection-panel-badge {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.selection-options {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.selection-option {
+    flex: 1;
+    max-width: 200px;
+    padding: 16px 20px;
+    border-radius: 12px;
     text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid #e2e8f0;
+    background: #ffffff;
 }
 
-.stRadio > div > label:hover {
-    background: #e0e7ff;
-    border-color: #818cf8;
+.selection-option:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
 }
 
-.stRadio > div > label[data-baseweb="radio"] > div:first-child {
-    display: none;
+.selection-option-active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
 }
 
-/* 选中状态 */
-.stRadio > div > label[data-baseweb="radio"][aria-checked="true"] {
-    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-    border-color: #2563eb !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+.selection-option-value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin-bottom: 4px;
+}
+
+.selection-option-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
 }
 
 /* ===== 组合显示 + 按钮 ===== */
@@ -194,25 +296,25 @@ html, body, [class*="css"] {
     background: linear-gradient(135deg, #eff6ff, #f0f9ff);
     border: 1.5px solid #bfdbfe;
     border-radius: 16px;
-    padding: 16px 24px;
+    padding: 14px 20px;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
 }
 
 .combo-display {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex: 1;
 }
 
 .combo-label {
     color: #475569;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     white-space: nowrap;
 }
 
@@ -220,9 +322,9 @@ html, body, [class*="css"] {
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-weight: 700;
     color: #1e40af;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     background: #ffffff;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 10px;
     border: 1.5px solid #bfdbfe;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
@@ -235,7 +337,7 @@ html, body, [class*="css"] {
     color: white !important;
     font-weight: 700 !important;
     font-size: 1rem !important;
-    padding: 12px 32px !important;
+    padding: 10px 28px !important;
     border-radius: 12px !important;
     border: none !important;
     box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
@@ -364,6 +466,43 @@ html, body, [class*="css"] {
     padding: 24px;
     margin-top: 16px;
 }
+
+/* 隐藏默认radio */
+.stRadio > div {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.stRadio > div > label {
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 48px;
+    text-align: center;
+}
+
+.stRadio > div > label:hover {
+    background: #e0e7ff;
+    border-color: #818cf8;
+}
+
+.stRadio > div > label[data-baseweb="radio"] > div:first-child {
+    display: none;
+}
+
+.stRadio > div > label[data-baseweb="radio"][aria-checked="true"] {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -390,7 +529,7 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 特征选择
+# 特征选择 - 一行15个
 # ======================
 st.markdown('<div class="features-section">', unsafe_allow_html=True)
 
@@ -399,40 +538,101 @@ st.markdown("""
     <div class="features-header-icon">🔧</div>
     <div>
         <div class="features-header-text">Feature Configuration</div>
-        <div class="features-header-desc">Toggle each feature value to define your scenario</div>
+        <div class="features-header-desc">Click any feature below to toggle its value</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-selected_features = {}
+# 初始化特征值
+for i in range(1, 16):
+    key = f"feature_{i}"
+    if key not in st.session_state:
+        st.session_state[key] = 0
 
-for row in range(3):
-    cols = st.columns(5)
-    for col_idx in range(5):
-        feat_num = row * 5 + col_idx + 1
-        if feat_num <= 15:
-            with cols[col_idx]:
-                st.markdown(
-                    f"""<div class="feature-card">
-                        <div class="feature-badge">F{feat_num}</div>
-                    </div>""",
-                    unsafe_allow_html=True
-                )
-                selected_features[f"feature_{feat_num}"] = st.radio(
-                    label=f"feature_{feat_num}",
-                    options=[0, 1],
-                    index=0,
-                    horizontal=True,
-                    label_visibility="collapsed",
-                    key=f"select_{feat_num}"
-                )
+# 初始化当前选中的特征
+if "selected_feature" not in st.session_state:
+    st.session_state.selected_feature = None
+
+# 处理特征点击
+def select_feature(feat_num):
+    st.session_state.selected_feature = feat_num
+
+def toggle_feature(feat_num, value):
+    st.session_state[f"feature_{feat_num}"] = value
+
+# 一行显示15个特征卡片
+cols = st.columns(15)
+for i in range(1, 16):
+    with cols[i-1]:
+        val = st.session_state[f"feature_{i}"]
+        is_selected = st.session_state.selected_feature == i
+
+        # 构建CSS类
+        card_class = "feature-unit"
+        if is_selected:
+            card_class += " feature-unit-active"
+        if val == 1:
+            card_class += " feature-unit-selected"
+
+        value_class = "feature-value feature-value-on" if val == 1 else "feature-value feature-value-off"
+        indicator_class = "feature-indicator indicator-on" if val == 1 else "feature-indicator indicator-off"
+
+        st.markdown(f"""
+        <div class="{card_class}" onclick="">
+            <div class="feature-name">F{i}</div>
+            <div class="{value_class}">{val}</div>
+            <div class="{indicator_class}"></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 使用button实现点击
+        if st.button(f"F{i}", key=f"btn_select_{i}", help=f"Click to configure Feature {i}", use_container_width=True):
+            select_feature(i)
+            st.rerun()
+
+# 选择面板 - 显示当前选中特征的配置选项
+if st.session_state.selected_feature is not None:
+    sf = st.session_state.selected_feature
+    current_val = st.session_state[f"feature_{sf}"]
+
+    st.markdown(f"""
+    <div class="selection-panel">
+        <div class="selection-panel-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="selection-panel-badge">F{sf}</span>
+                <span class="selection-panel-title">Configure Feature {sf}</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    opt_col1, opt_col2, opt_col3 = st.columns([1, 1, 1])
+
+    with opt_col1:
+        pass
+    with opt_col2:
+        new_val = st.radio(
+            f"Select value for F{sf}",
+            options=[0, 1],
+            index=current_val,
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"radio_f{sf}"
+        )
+        if new_val != current_val:
+            toggle_feature(sf, new_val)
+            st.rerun()
+    with opt_col3:
+        pass
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================
 # 组合显示 + START 按钮
 # ======================
-feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
+feat_values = [str(st.session_state[f"feature_{i}"]) for i in range(1, 16)]
 
 st.markdown(
     f"""<div class="action-bar">
@@ -440,17 +640,13 @@ st.markdown(
             <span class="combo-label">Current Combination</span>
             <span class="combo-value">[{', '.join(feat_values)}]</span>
         </div>
-        <div style="flex-shrink:0;">
     </div>""",
     unsafe_allow_html=True
 )
 
-# 按钮需要单独放，不能嵌套在 markdown 里
-btn_col1, btn_col2, btn_col3 = st.columns([1, 0.4, 1])
+btn_col1, btn_col2, btn_col3 = st.columns([1, 0.35, 1])
 with btn_col2:
     analyze = st.button("▶ START", use_container_width=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
@@ -458,6 +654,7 @@ st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 # 仪表盘区域
 # ======================
 if analyze:
+    selected_features = {f"feature_{i}": st.session_state[f"feature_{i}"] for i in range(1, 16)}
 
     f = selected_features
     infeasible = False
@@ -481,11 +678,7 @@ if analyze:
 
     st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
 
-    # ======================
-    # 不可行
-    # ======================
     if infeasible:
-
         def empty_gauge_card(title, subtitle, icon, icon_bg, card_class, chart_key):
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
@@ -517,42 +710,16 @@ if analyze:
             st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
         g1, g2, g3 = st.columns(3)
-
         with g1:
-            empty_gauge_card(
-                "Delay Change",
-                "Mean delay per section",
-                "📊", "#dbeafe",
-                "gauge-gray",
-                "empty_gauge_1"
-            )
+            empty_gauge_card("Delay Change", "Mean delay per section", "📊", "#dbeafe", "gauge-gray", "empty_gauge_1")
         with g2:
-            empty_gauge_card(
-                "Improvement",
-                "Probability of better punctuality",
-                "📈", "#d1fae5",
-                "gauge-gray",
-                "empty_gauge_2"
-            )
+            empty_gauge_card("Improvement", "Probability of better punctuality", "📈", "#d1fae5", "gauge-gray", "empty_gauge_2")
         with g3:
-            empty_gauge_card(
-                "Harm",
-                "Probability of worse punctuality",
-                "📉", "#fee2e2",
-                "gauge-gray",
-                "empty_gauge_3"
-            )
+            empty_gauge_card("Harm", "Probability of worse punctuality", "📉", "#fee2e2", "gauge-gray", "empty_gauge_3")
 
-        st.markdown(
-            '<div class="result-banner result-infeasible">⚠️ Infeasible Feature Combination</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="result-banner result-infeasible">⚠️ Infeasible Feature Combination</div>', unsafe_allow_html=True)
 
-    # ======================
-    # 可行
-    # ======================
     else:
-
         match_mask = pd.Series([True] * len(df_features))
         for feat_name, feat_val in selected_features.items():
             match_mask = match_mask & (df_features[feat_name] == feat_val)
@@ -563,7 +730,6 @@ if analyze:
             st.error("❌ 未找到完全匹配的特征组合")
         else:
             all_results = []
-
             for mid in matched_ids:
                 if mid in df_results["id"].values:
                     row_vals = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
@@ -573,7 +739,6 @@ if analyze:
                 st.error("❌ 未找到模型结果")
             else:
                 all_results = np.array(all_results)
-
                 mean_val = float(np.mean(all_results))
                 count = len(all_results)
                 pos_ratio = np.sum(all_results > 0) / count
@@ -615,51 +780,14 @@ if analyze:
                     st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
                 g1, g2, g3 = st.columns(3)
-
                 with g1:
-                    draw_gauge_card(
-                        "Delay Change",
-                        "Mean delay per section if overridden",
-                        mean_val,
-                        min(0, np.min(all_results)),
-                        np.max(all_results),
-                        "#2563eb",
-                        "📊", "#dbeafe",
-                        "gauge-blue",
-                        "gauge_mean",
-                        False
-                    )
-
+                    draw_gauge_card("Delay Change", "Mean delay per section if overridden", mean_val, min(0, np.min(all_results)), np.max(all_results), "#2563eb", "📊", "#dbeafe", "gauge-blue", "gauge_mean", False)
                 with g2:
-                    draw_gauge_card(
-                        "Improvement",
-                        "Probability of better punctuality",
-                        pos_ratio * 100,
-                        0, 100,
-                        "#059669",
-                        "📈", "#d1fae5",
-                        "gauge-green",
-                        "gauge_pos",
-                        True
-                    )
-
+                    draw_gauge_card("Improvement", "Probability of better punctuality", pos_ratio * 100, 0, 100, "#059669", "📈", "#d1fae5", "gauge-green", "gauge_pos", True)
                 with g3:
-                    draw_gauge_card(
-                        "Harm",
-                        "Probability of worse punctuality",
-                        neg_ratio * 100,
-                        0, 100,
-                        "#dc2626",
-                        "📉", "#fee2e2",
-                        "gauge-red",
-                        "gauge_neg",
-                        True
-                    )
+                    draw_gauge_card("Harm", "Probability of worse punctuality", neg_ratio * 100, 0, 100, "#dc2626", "📉", "#fee2e2", "gauge-red", "gauge_neg", True)
 
-                st.markdown(
-                    '<div class="result-banner result-feasible">✅ Feasible Feature Combination</div>',
-                    unsafe_allow_html=True
-                )
+                st.markdown('<div class="result-banner result-feasible">✅ Feasible Feature Combination</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -674,5 +802,4 @@ else:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Footer
 st.markdown("<div class='footer-text'>© The Prototyped Decision Support System</div>", unsafe_allow_html=True)
