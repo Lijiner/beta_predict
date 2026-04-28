@@ -15,107 +15,111 @@ st.set_page_config(
 )
 
 # ======================
-# 样式（原样保留）
+# 极简样式
 # ======================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
+    font-family: Arial, sans-serif;
 }
 
-/* ===== 标题区域 ===== */
+/* 标题 */
 .title-wrapper {
-    background: linear-gradient(135deg, #0c1220 0%, #1a365d 40%, #0f172a 100%);
-    padding: 40px 20px 32px 20px;
-    border-radius: 20px;
-    margin-bottom: 28px;
-    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35);
-    position: relative;
-    overflow: hidden;
-}
-
-.title-wrapper::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #3b82f6, #06b6d4, #8b5cf6, #3b82f6);
-    background-size: 300% 100%;
-    animation: gradientShift 4s ease infinite;
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    padding: 20px 0;
+    text-align: center;
 }
 
 .main-title {
-    font-size: 2.8rem;
-    font-weight: 900;
-    text-align: center;
-    color: #ffffff;
-    margin-bottom: 8px;
-    letter-spacing: -1px;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    font-size: 28px;
+    font-weight: 700;
 }
 
 .sub-title {
-    font-size: 1.05rem;
-    text-align: center;
-    color: #94a3b8;
-    font-weight: 400;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    font-size: 14px;
+    color: #666;
+    margin-top: 6px;
 }
 
-/* ===== 特征区 ===== */
+/* 特征区域 */
 .features-section {
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    padding: 24px 28px 20px 28px;
-    border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 20px;
+    padding: 10px 0;
 }
 
-.features-header {
+.features-header-text {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.features-header-desc {
+    font-size: 12px;
+    color: #888;
+}
+
+/* 15列 */
+.features-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding-bottom: 14px;
-    border-bottom: 2px solid #f1f5f9;
+    gap: 6px;
 }
 
-.features-header-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
+/* 特征块（极简） */
+.feature-unit {
+    flex: 1;
+    text-align: center;
+    padding: 6px 2px;
+    border: 1px solid #ddd;
 }
 
-/* ===== 按钮 ===== */
+/* 统一无颜色 */
+.feature-name {
+    font-size: 10px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.feature-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;   /* 不区分0/1颜色 */
+}
+
+/* 按钮极简 */
 .stButton > button {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8, #3730a3) !important;
-    color: white !important;
-    font-weight: 700 !important;
-    border-radius: 12px !important;
+    width: 100%;
+    background: #f5f5f5 !important;
+    color: #000 !important;
+    border: 1px solid #ddd !important;
+    font-size: 12px !important;
+    padding: 2px !important;
 }
 
-/* ===== 仪表盘 ===== */
+/* 组合栏 */
+.action-bar {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+}
+
+.combo-value {
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* 仪表盘 */
 .gauges-container {
-    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-    border-radius: 20px;
-    padding: 28px;
-    border: 1px solid #e2e8f0;
+    margin-top: 20px;
+}
+
+.gauge-card {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+/* footer */
+.footer-text {
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin-top: 20px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -126,7 +130,7 @@ html, body, [class*="css"] {
 st.markdown("""
 <div class="title-wrapper">
     <div class="main-title">The Prototyped Decision Support System</div>
-    <div class="sub-title">Train Delay Override Analysis & Punctuality Prediction</div>
+    <div class="sub-title">Train Delay Override Analysis &amp; Punctuality Prediction</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -143,90 +147,55 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 特征选择（轻量版）
+# 初始化特征
 # ======================
-st.markdown('<div class="features-section">', unsafe_allow_html=True)
-
-st.markdown("""
-<div class="features-header">
-    <div class="features-header-icon">🔧</div>
-    <div>
-        <div style="font-weight:700;">Feature Configuration</div>
-        <div style="font-size:0.8rem;color:#64748b;">select a value for each feature</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# 初始化
 for i in range(1, 16):
-    k = f"feature_{i}"
-    if k not in st.session_state:
-        st.session_state[k] = 0
+    key = f"feature_{i}"
+    if key not in st.session_state:
+        st.session_state[key] = 0
 
 def set_feature(i, v):
     st.session_state[f"feature_{i}"] = v
 
-# 3×5 网格
-rows = [st.columns(5) for _ in range(3)]
+# ======================
+# 特征选择（一行15个）
+# ======================
+st.markdown('<div class="features-section">', unsafe_allow_html=True)
 
-idx = 1
-for r in range(3):
-    for c in range(5):
-        if idx > 15:
-            break
+cols = st.columns(15)
 
-        with rows[r][c]:
-            val = st.session_state[f"feature_{idx}"]
+for i in range(1, 16):
+    with cols[i-1]:
+        val = st.session_state[f"feature_{i}"]
 
-            st.markdown(
-                f"""
-                <div style="
-                    text-align:center;
-                    font-weight:700;
-                    color:#1e293b;
-                    margin-bottom:6px;
-                    padding:4px;
-                    border-radius:6px;
-                    background:{'#ecfdf5' if val==1 else '#f8fafc'};
-                    border:1px solid {'#10b981' if val==1 else '#e2e8f0'};
-                ">
-                F{idx}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        st.markdown(f"""
+        <div class="feature-unit">
+            <div class="feature-name">F{i}</div>
+            <div class="feature-value">{val}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-            c1, c2 = st.columns(2)
-
-            with c1:
-                if st.button("0", key=f"f{idx}_0", use_container_width=True):
-                    set_feature(idx, 0)
-                    st.rerun()
-
-            with c2:
-                if st.button("1", key=f"f{idx}_1", use_container_width=True):
-                    set_feature(idx, 1)
-                    st.rerun()
-
-        idx += 1
+        st.button("0", key=f"f{i}_0", on_click=set_feature, args=(i, 0))
+        st.button("1", key=f"f{i}_1", on_click=set_feature, args=(i, 1))
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================
-# START + 组合
+# 组合显示
 # ======================
 feat_values = [str(st.session_state[f"feature_{i}"]) for i in range(1, 16)]
 
 st.markdown(f"""
-<div style="background:#eff6ff;padding:12px;border-radius:12px;">
-Current feature Combination: [{', '.join(feat_values)}]
+<div class="action-bar">
+    Current feature Combination:
+    <div class="combo-value">[{', '.join(feat_values)}]</div>
 </div>
 """, unsafe_allow_html=True)
 
-analyze = st.button("START", use_container_width=True)
+analyze = st.button("START")
 
 # ======================
-# 仪表盘（完整保留原逻辑）
+# 结果区域
 # ======================
 if analyze:
 
@@ -255,20 +224,65 @@ if analyze:
     st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
 
     if infeasible:
-        st.error("⚠️ Infeasible Feature Combination")
+
+        st.markdown("""
+        <div class="gauge-card">
+            ⚠️ Infeasible Feature Combination
+        </div>
+        """, unsafe_allow_html=True)
 
     else:
-        st.success("✅ Feasible Feature Combination")
+
+        match_mask = pd.Series([True] * len(df_features))
+        for k, v in selected_features.items():
+            match_mask &= (df_features[k] == v)
+
+        matched_ids = df_features.loc[match_mask, "id"].values
+
+        all_results = []
+        for mid in matched_ids:
+            if mid in df_results["id"].values:
+                row = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
+                all_results.extend(row)
+
+        if len(all_results) > 0:
+            all_results = np.array(all_results)
+
+            mean_val = np.mean(all_results)
+            pos_ratio = np.sum(all_results > 0) / len(all_results)
+            neg_ratio = np.sum(all_results < 0) / len(all_results)
+
+            st.markdown(f"""
+            <div class="gauge-card">
+                Mean: {mean_val}
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="gauge-card">
+                Harm: {pos_ratio * 100}%
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="gauge-card">
+                Improve: {neg_ratio * 100}%
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <div style="text-align:center; margin-top:10px;">
+                ✅ Feasible Feature Combination
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
     st.markdown("""
-    <div style="text-align:center;padding:60px;color:#94a3b8;">
-        📊 Ready to Analyze
+    <div style="text-align:center; padding:40px; color:#888;">
+        Ready to Analyze
     </div>
     """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<div style='text-align:center;color:#94a3b8;margin-top:20px;'>© The Prototyped Decision Support System</div>", unsafe_allow_html=True)
+st.markdown("<div class='footer-text'>© The Prototyped Decision Support System</div>", unsafe_allow_html=True)
