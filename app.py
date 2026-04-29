@@ -165,6 +165,7 @@ if analyze:
             value=mean_val,
             number={
                 "suffix":" seconds",
+                "valueformat":".2f",
                 "font": {"size": 30}
             },
             gauge={
