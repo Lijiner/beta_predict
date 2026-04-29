@@ -133,7 +133,7 @@ if analyze:
     # ======================
     with g1:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:30px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
             "Predicted probability that override harms train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -144,7 +144,9 @@ if analyze:
             value=pos_ratio * 100,
             number={"suffix": "%", "font": {"size": 25}},
             gauge={"axis": {"range": [0, 100]},
-                   "bar": {"color": "#dc2626"}}
+                   "bar": {"color": "#dc2626"},
+                   "tickfont": {"size": 20} 
+                  }
         ))
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
@@ -154,7 +156,7 @@ if analyze:
     # ======================
     with g2:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:30px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
             "Predicted change in train delay if overriden "
             "</div>",
             unsafe_allow_html=True
@@ -170,7 +172,8 @@ if analyze:
             },
             gauge={
                 "axis": {"range": [gauge_min, gauge_max]},
-                "bar": {"color": "#2563eb"}
+                "bar": {"color": "#2563eb"},
+                "tickfont": {"size": 20} 
             }
         ))
         fig.update_layout(height=420)
@@ -181,7 +184,7 @@ if analyze:
     # ======================
     with g3:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:30px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
             "Predicted probability that override improves train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -192,7 +195,9 @@ if analyze:
             value=neg_ratio * 100,
             number={"suffix": "%", "font": {"size": 25}},
             gauge={"axis": {"range": [0, 100]},
-                   "bar": {"color": "#059669"}}
+                   "bar": {"color": "#059669"},
+                  "tickfont": {"size": 20} 
+                  }
         ))
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
