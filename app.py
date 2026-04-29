@@ -5,134 +5,27 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-# ======================
-# 页面配置
-# ======================
-st.set_page_config(
-    page_title="The Prototyped Decision Support System",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="结果可视化分析", layout="wide")
 
 # ======================
-# 极简样式
+# 样式
 # ======================
 st.markdown("""
 <style>
-html, body, [class*="css"] {
-    font-family: Arial, sans-serif;
-}
-
-/* 标题 */
-.title-wrapper {
-    padding: 20px 0;
+.main-title { font-size: 2.2rem; font-weight: bold; text-align: center; }
+.sub-title { font-size: 1rem; text-align: center; margin-bottom: 1rem; }
+.feature-box {
+    padding: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
     text-align: center;
 }
-
-.main-title {
-    font-size: 28px;
-    font-weight: 700;
-}
-
-.sub-title {
-    font-size: 14px;
-    color: #666;
-    margin-top: 6px;
-}
-
-/* 特征区域 */
-.features-section {
-    padding: 10px 0;
-}
-
-.features-header-text {
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.features-header-desc {
-    font-size: 12px;
-    color: #888;
-}
-
-/* 15列 */
-.features-row {
-    display: flex;
-    gap: 6px;
-}
-
-/* 特征块（极简） */
-.feature-unit {
-    flex: 1;
-    text-align: center;
-    padding: 6px 2px;
-    border: 1px solid #ddd;
-}
-
-/* 统一无颜色 */
-.feature-name {
-    font-size: 10px;
-    color: #333;
-    margin-bottom: 4px;
-}
-
-.feature-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: #000;   /* 不区分0/1颜色 */
-}
-
-/* 按钮极简 */
-.stButton > button {
-    width: 100%;
-    background: #f5f5f5 !important;
-    color: #000 !important;
-    border: 1px solid #ddd !important;
-    font-size: 12px !important;
-    padding: 2px !important;
-}
-
-/* 组合栏 */
-.action-bar {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #eee;
-}
-
-.combo-value {
-    font-family: monospace;
-    font-size: 12px;
-}
-
-/* 仪表盘 */
-.gauges-container {
-    margin-top: 20px;
-}
-
-.gauge-card {
-    border: 1px solid #ddd;
-    padding: 10px;
-}
-
-/* footer */
-.footer-text {
-    text-align: center;
-    font-size: 12px;
-    color: #999;
-    margin-top: 20px;
-}
+.center-text { text-align:center; margin-top:20px; font-size:20px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ======================
-# 标题
-# ======================
-st.markdown("""
-<div class="title-wrapper">
-    <div class="main-title">The Prototyped Decision Support System</div>
-    <div class="sub-title">Train Delay Override Analysis &amp; Punctuality Prediction</div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="main-title">🎯 模型结果可视化分析</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">选择15个特征值，查看模型结果</div>', unsafe_allow_html=True)
 
 # ======================
 # 数据加载
@@ -147,92 +40,61 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 初始化特征
+# 上：特征选择（1行）
 # ======================
-for i in range(1, 16):
-    key = f"feature_{i}"
-    if key not in st.session_state:
-        st.session_state[key] = 0
-
-def set_feature(i, v):
-    st.session_state[f"feature_{i}"] = v
-
-# ======================
-# 特征选择（一行15个）
-# ======================
-st.markdown('<div class="features-section">', unsafe_allow_html=True)
+st.markdown("### 🔧 特征选择")
 
 cols = st.columns(15)
+selected_features = {}
 
-for i in range(1, 16):
-    with cols[i-1]:
-        val = st.session_state[f"feature_{i}"]
+for i in range(15):
+    with cols[i]:
+        st.markdown(f"<div class='feature-box'><b>F{i+1}</b></div>", unsafe_allow_html=True)
+        selected_features[f"feature_{i+1}"] = st.radio(
+            label=f"feature_{i+1}",
+            options=[0, 1],
+            index=0,
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"f{i+1}"
+        )
 
-        st.markdown(f"""
-        <div class="feature-unit">
-            <div class="feature-name">F{i}</div>
-            <div class="feature-value">{val}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.button("0", key=f"f{i}_0", on_click=set_feature, args=(i, 0))
-        st.button("1", key=f"f{i}_1", on_click=set_feature, args=(i, 1))
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ======================
-# 组合显示
-# ======================
-feat_values = [str(st.session_state[f"feature_{i}"]) for i in range(1, 16)]
-
-st.markdown(f"""
-<div class="action-bar">
-    Current feature Combination:
-    <div class="combo-value">[{', '.join(feat_values)}]</div>
-</div>
-""", unsafe_allow_html=True)
-
-analyze = st.button("START")
+analyze = st.button("分析模型结果")
 
 # ======================
-# 结果区域
+# 可行性判断函数
+# ======================
+def is_feasible(f):
+    if f["feature_2"] == 1 and f["feature_3"] != 1:
+        return False
+    if f["feature_4"] == 1 and (f["feature_5"] != 1 or f["feature_6"] != 1):
+        return False
+    if f["feature_5"] == 1 and f["feature_6"] != 1:
+        return False
+    if f["feature_7"] == 1 and f["feature_8"] != 1:
+        return False
+    if f["feature_9"] == 1 and f["feature_10"] != 1:
+        return False
+    if f["feature_11"] == 1 and (f["feature_12"] != 1 or f["feature_13"] != 1 or f["feature_14"] != 1):
+        return False
+    if f["feature_12"] == 1 and (f["feature_13"] != 1 or f["feature_14"] != 1):
+        return False
+    if f["feature_13"] == 1 and f["feature_14"] != 1:
+        return False
+    return True
+
+# ======================
+# 下：仪表盘
 # ======================
 if analyze:
 
-    selected_features = {f"feature_{i}": st.session_state[f"feature_{i}"] for i in range(1, 16)}
+    feasible = is_feasible(selected_features)
 
-    f = selected_features
-    infeasible = False
-
-    if f["feature_2"] == 1 and f["feature_3"] != 1:
-        infeasible = True
-    if f["feature_4"] == 1 and (f["feature_5"] == 1 or f["feature_6"] != 1):
-        infeasible = True
-    if f["feature_5"] == 1 and f["feature_6"] != 1:
-        infeasible = True
-    if f["feature_7"] == 1 and f["feature_8"] != 1:
-        infeasible = True
-    if f["feature_9"] == 1 and f["feature_10"] != 1:
-        infeasible = True
-    if f["feature_11"] == 1 and (f["feature_12"] == 1 or f["feature_13"] != 1 or f["feature_14"] == 1):
-        infeasible = True
-    if f["feature_12"] == 1 and (f["feature_13"] == 1 or f["feature_14"] != 1):
-        infeasible = True
-    if f["feature_13"] == 1 and f["feature_14"] != 1:
-        infeasible = True
-
-    st.markdown('<div class="gauges-container">', unsafe_allow_html=True)
-
-    if infeasible:
-
-        st.markdown("""
-        <div class="gauge-card">
-            ⚠️ Infeasible Feature Combination
-        </div>
-        """, unsafe_allow_html=True)
-
+    if not feasible:
+        mean_val = 0
+        pos_ratio = 0
+        neg_ratio = 0
     else:
-
         match_mask = pd.Series([True] * len(df_features))
         for k, v in selected_features.items():
             match_mask &= (df_features[k] == v)
@@ -242,47 +104,64 @@ if analyze:
         all_results = []
         for mid in matched_ids:
             if mid in df_results["id"].values:
-                row = df_results.loc[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
-                all_results.extend(row)
+                vals = df_results[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
+                all_results.extend(vals)
 
-        if len(all_results) > 0:
-            all_results = np.array(all_results)
+        all_results = np.array(all_results)
 
-            mean_val = np.mean(all_results)
-            pos_ratio = np.sum(all_results > 0) / len(all_results)
-            neg_ratio = np.sum(all_results < 0) / len(all_results)
+        mean_val = float(np.mean(all_results)) if len(all_results) else 0
+        pos_ratio = np.sum(all_results > 0) / len(all_results) if len(all_results) else 0
+        neg_ratio = np.sum(all_results < 0) / len(all_results) if len(all_results) else 0
 
-            st.markdown(f"""
-            <div class="gauge-card">
-                Mean: {mean_val}
-            </div>
-            """, unsafe_allow_html=True)
+    st.markdown("### 🎯 模型分析仪表盘")
 
-            st.markdown(f"""
-            <div class="gauge-card">
-                Harm: {pos_ratio * 100}%
-            </div>
-            """, unsafe_allow_html=True)
+    g1, g2, g3 = st.columns(3)
 
-            st.markdown(f"""
-            <div class="gauge-card">
-                Improve: {neg_ratio * 100}%
-            </div>
-            """, unsafe_allow_html=True)
+    # 正占比
+    with g1:
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=pos_ratio * 100,
+            number={"suffix": "%"},
+            title={"text": "大于0占比"},
+            gauge={"axis": {"range": [0, 100]}}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
 
-            st.markdown("""
-            <div style="text-align:center; margin-top:10px;">
-                ✅ Feasible Feature Combination
-            </div>
-            """, unsafe_allow_html=True)
+    # 均值
+    with g2:
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=mean_val,
+            number={"valueformat": ".2f"},
+            title={"text": "均值"},
+            gauge={"axis": {"range": [-1, 1]}}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    # 负占比（新增）
+    with g3:
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=neg_ratio * 100,
+            number={"suffix": "%"},
+            title={"text": "小于0占比"},
+            gauge={"axis": {"range": [0, 100]}}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
 
-else:
-    st.markdown("""
-    <div style="text-align:center; padding:40px; color:#888;">
-        Ready to Analyze
-    </div>
-    """, unsafe_allow_html=True)
+    # ======================
+    # 可行性提示（关键）
+    # ======================
+    if feasible:
+        st.markdown(
+            "<div class='center-text'><b>Feasible feature combination</b></div>",
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            "<div class='center-text' style='color:red;'><b>Infeasible feature combination</b></div>",
+            unsafe_allow_html=True
+        )
 
-st.markdown("<div class='footer-text'>© The Prototyped Decision Support System</div>", unsafe_allow_html=True)
+st.markdown("---")
