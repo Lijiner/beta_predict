@@ -117,14 +117,14 @@ if analyze:
         data_min = float(np.min(all_results))
         data_max = float(np.max(all_results))
 
-        gauge_min = min(0, data_min * 1.1)
-        gauge_max = max(100, data_max * 1.1)
-
+        # gauge_min = min(0, data_min * 1.1)
+        # gauge_max = max(100, data_max * 1.1)
+        gauge_min, gauge_max = -100, 100
     else:
         mean_val = 0
         pos_ratio = 0
         neg_ratio = 0
-        gauge_min, gauge_max = 0, 100
+        gauge_min, gauge_max = -100, 100
 
     g1, g2, g3 = st.columns(3)
 
@@ -155,7 +155,7 @@ if analyze:
     with g2:
         st.markdown(
             "<div style='text-align:center; font-weight:700; font-size:20px;'>"
-            "Per train section dredicted change in train delay if overriden"
+            "Predicted change in train delay if overriden "
             "</div>",
             unsafe_allow_html=True
         )
@@ -164,7 +164,7 @@ if analyze:
             mode="gauge+number",
             value=mean_val,
             number={
-                "suffix":" seconds",
+                "suffix":" seconds per train section",
                 "valueformat":".2f",
                 "font": {"size": 30}
             },
