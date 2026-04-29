@@ -66,7 +66,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown("<br><br>", unsafe_allow_html=True)  # 向下推
+st.markdown("<br>", unsafe_allow_html=True)  # 向下推
 analyze = st.button("START")
 
 # ======================
