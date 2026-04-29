@@ -114,8 +114,8 @@ if analyze:
         neg_ratio = np.sum(all_results < 0) / len(all_results)
 
         # ✅ 动态范围（核心）
-        data_min = float(np.min(all_results))
-        data_max = float(np.max(all_results))
+        # data_min = float(np.min(all_results))
+        # data_max = float(np.max(all_results))
 
         # gauge_min = min(0, data_min * 1.1)
         # gauge_max = max(100, data_max * 1.1)
@@ -133,7 +133,7 @@ if analyze:
     # ======================
     with g1:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
+            "<div style='text-align:center; font-weight:800; font-size:20px;'>"
             "Predicted probability that override harms train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -142,7 +142,7 @@ if analyze:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=pos_ratio * 100,
-            number={"suffix": "%", "font": {"size": 30}},
+            number={"suffix": "%", "font": {"size": 25}},
             gauge={"axis": {"range": [0, 100]},
                    "bar": {"color": "#dc2626"}}
         ))
@@ -154,7 +154,7 @@ if analyze:
     # ======================
     with g2:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
+            "<div style='text-align:center; font-weight:800; font-size:20px;'>"
             "Predicted change in train delay if overriden "
             "</div>",
             unsafe_allow_html=True
@@ -166,7 +166,7 @@ if analyze:
             number={
                 "suffix":" seconds per train section",
                 "valueformat":".2f",
-                "font": {"size": 30}
+                "font": {"size": 25}
             },
             gauge={
                 "axis": {"range": [gauge_min, gauge_max]},
@@ -181,7 +181,7 @@ if analyze:
     # ======================
     with g3:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
+            "<div style='text-align:center; font-weight:800; font-size:20px;'>"
             "Predicted probability that override improves train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -190,7 +190,7 @@ if analyze:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=neg_ratio * 100,
-            number={"suffix": "%", "font": {"size": 30}},
+            number={"suffix": "%", "font": {"size": 25}},
             gauge={"axis": {"range": [0, 100]},
                    "bar": {"color": "#059669"}}
         ))
