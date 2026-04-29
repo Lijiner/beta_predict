@@ -143,9 +143,8 @@ if analyze:
             mode="gauge+number",
             value=pos_ratio * 100,
             number={"suffix": "%", "font": {"size": 25}},
-            gauge={"axis": {"range": [0, 100]},
-                   "bar": {"color": "#dc2626"},
-                   "tickfont": {"size": 20} 
+            gauge={"axis": {"range": [0, 100],"tickfont": {"size": 20}},
+                   "bar": {"color": "#dc2626"}
                   }
         ))
         fig.update_layout(height=420)
@@ -171,9 +170,8 @@ if analyze:
                 "font": {"size": 25}
             },
             gauge={
-                "axis": {"range": [gauge_min, gauge_max]},
+                "axis": {"range": [gauge_min, gauge_max],"tickfont": {"size": 20}},
                 "bar": {"color": "#2563eb"},
-                "tickfont": {"size": 20} 
             }
         ))
         fig.update_layout(height=420)
@@ -194,7 +192,7 @@ if analyze:
             mode="gauge+number",
             value=neg_ratio * 100,
             number={"suffix": "%", "font": {"size": 25}},
-            gauge={"axis": {"range": [0, 100]},
+            gauge={"axis": {"range": [0, 100],"tickfont": {"size": 20}},
                    "bar": {"color": "#059669"},
                   "tickfont": {"size": 20} 
                   }
