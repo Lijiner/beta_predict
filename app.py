@@ -40,7 +40,7 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 特征选择（一行）
+# 特征选择
 # ======================
 st.markdown("### 🔧 特征选择")
 
@@ -59,7 +59,7 @@ for i in range(15):
             key=f"f{i+1}"
         )
 
-# 👉 当前组合（新增保留）
+# 当前组合
 feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
 st.markdown(
     f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
@@ -71,7 +71,7 @@ st.markdown(
 analyze = st.button("分析模型结果")
 
 # ======================
-# 可行性规则
+# 规则校验
 # ======================
 def is_feasible(f):
     if f["feature_2"] == 1 and f["feature_3"] != 1: return False
@@ -92,7 +92,6 @@ if analyze:
     feasible = is_feasible(selected_features)
 
     if feasible:
-        # ✅ 正确匹配方式（修复核心BUG）
         match_mask = pd.Series([True] * len(df_features))
         for k, v in selected_features.items():
             match_mask &= (df_features[k] == v)
@@ -114,10 +113,19 @@ if analyze:
         mean_val = float(np.mean(all_results))
         pos_ratio = np.sum(all_results > 0) / len(all_results)
         neg_ratio = np.sum(all_results < 0) / len(all_results)
+
+        # ✅ 动态范围（核心）
+        data_min = float(np.min(all_results))
+        data_max = float(np.max(all_results))
+
+        gauge_min = min(-100, data_min * 1.1)
+        gauge_max = max(200, data_max * 1.1)
+
     else:
         mean_val = 0
         pos_ratio = 0
         neg_ratio = 0
+        gauge_min, gauge_max = -100, 200
 
     st.markdown("### 🎯 模型分析仪表盘")
     g1, g2, g3 = st.columns(3)
@@ -126,34 +134,50 @@ if analyze:
     # 1️⃣ 大于0（红）
     # ======================
     with g1:
+        st.markdown(
+            "<div style='text-align:center; font-weight:700; font-size:16px;'>"
+            "Predicted probability that override harms train punctuality"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=pos_ratio * 100,
-            number={"suffix": "%", "font": {"size": 28}},
-            title={"text": "Predicted probability that override harms train punctuality"},
+            number={"suffix": "%", "font": {"size": 40}},
             gauge={"axis": {"range": [0, 100]},
-                   "bar": {"color": "red"}}
+                   "bar": {"color": "#dc2626"}}
         ))
-        fig.update_layout(height=260)
+        fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
     # ======================
-    # 2️⃣ 均值（蓝）
+    # 2️⃣ 均值（蓝）🔥动态范围
     # ======================
     with g2:
+        st.markdown(
+            "<div style='text-align:center; font-weight:700; font-size:16px;'>"
+            "Per train section dredicted change in train delay if overriden"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=mean_val,
-            number={"font": {"size": 28}},
-            title={"text": "Per train section dredicted change in train delay if overriden"},
-            gauge={"axis": {"range": [-1, 1]},
-                   "bar": {"color": "blue"}}
+            number={"font": {"size": 40}},
+            gauge={
+                "axis": {"range": [gauge_min, gauge_max]},
+                "bar": {"color": "#2563eb"}
+            }
         ))
-        fig.update_layout(height=260)
+        fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
         st.markdown(
-            f"<div class='center-text'><b>{mean_val:.2f} seconds</b></div>",
+            f"<div style='text-align:center; font-size:13px; color:#6b7280;'>"
+            f"{mean_val:.2f} seconds"
+            "</div>",
             unsafe_allow_html=True
         )
 
@@ -161,15 +185,21 @@ if analyze:
     # 3️⃣ 小于0（绿）
     # ======================
     with g3:
+        st.markdown(
+            "<div style='text-align:center; font-weight:700; font-size:16px;'>"
+            "Predicted probability that override improves train punctuality"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=neg_ratio * 100,
-            number={"suffix": "%", "font": {"size": 28}},
-            title={"text": "Predicted probability that override improves train punctuality"},
+            number={"suffix": "%", "font": {"size": 40}},
             gauge={"axis": {"range": [0, 100]},
-                   "bar": {"color": "green"}}
+                   "bar": {"color": "#059669"}}
         ))
-        fig.update_layout(height=260)
+        fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
     # ======================
