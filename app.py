@@ -66,6 +66,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown("<br><br>", unsafe_allow_html=True)  # 向下推
 analyze = st.button("START")
 
 # ======================
@@ -116,16 +117,15 @@ if analyze:
         data_min = float(np.min(all_results))
         data_max = float(np.max(all_results))
 
-        gauge_min = min(-100, data_min * 1.1)
-        gauge_max = max(200, data_max * 1.1)
+        gauge_min = min(0, data_min * 1.1)
+        gauge_max = max(100, data_max * 1.1)
 
     else:
         mean_val = 0
         pos_ratio = 0
         neg_ratio = 0
-        gauge_min, gauge_max = -100, 200
+        gauge_min, gauge_max = 0, 100
 
-    st.markdown("### 🎯 模型分析仪表盘")
     g1, g2, g3 = st.columns(3)
 
     # ======================
@@ -133,7 +133,7 @@ if analyze:
     # ======================
     with g1:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:16px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
             "Predicted probability that override harms train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -142,7 +142,7 @@ if analyze:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=pos_ratio * 100,
-            number={"suffix": "%", "font": {"size": 40}},
+            number={"suffix": "%", "font": {"size": 30}},
             gauge={"axis": {"range": [0, 100]},
                    "bar": {"color": "#dc2626"}}
         ))
@@ -154,7 +154,7 @@ if analyze:
     # ======================
     with g2:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:16px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
             "Per train section dredicted change in train delay if overriden"
             "</div>",
             unsafe_allow_html=True
@@ -162,8 +162,11 @@ if analyze:
 
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
-            value=f"{mean_val:.2f} seconds",
-            number={"font": {"size": 40}},
+            value=mean_val,
+            number={
+                "suffix":" seconds",
+                "font": {"size": 30}
+            },
             gauge={
                 "axis": {"range": [gauge_min, gauge_max]},
                 "bar": {"color": "#2563eb"}
@@ -177,7 +180,7 @@ if analyze:
     # ======================
     with g3:
         st.markdown(
-            "<div style='text-align:center; font-weight:700; font-size:16px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:20px;'>"
             "Predicted probability that override improves train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -186,7 +189,7 @@ if analyze:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=neg_ratio * 100,
-            number={"suffix": "%", "font": {"size": 40}},
+            number={"suffix": "%", "font": {"size": 30}},
             gauge={"axis": {"range": [0, 100]},
                    "bar": {"color": "#059669"}}
         ))
@@ -198,12 +201,12 @@ if analyze:
     # ======================
     if feasible:
         st.markdown(
-            "<div style='text-align:center; font-size:16px;'><b>Feasible feature combination</b></div>",
+            "<div style='text-align:center; font-size:28px;'><b>Feasible feature combination</b></div>",
             unsafe_allow_html=True
         )
     else:
         st.markdown(
-            "<div style='text-align:center; color:red; font-size:16px;'><b>Infeasible feature combination</b></div>",
+            "<div style='text-align:center; color:red; font-size:28px;'><b>Infeasible feature combination</b></div>",
             unsafe_allow_html=True
         )
 
