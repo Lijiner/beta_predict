@@ -20,7 +20,7 @@ st.markdown("""
     border-radius: 6px;
     text-align: center;
 }
-.center-text { text-align:center; margin-top:20px; font-size:20px; }
+.center-text { text-align:center; margin-top:10px; font-size:14px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -40,7 +40,7 @@ def load_data():
 df_features, df_results = load_data()
 
 # ======================
-# 上：特征选择（1行）
+# 特征选择（一行）
 # ======================
 st.markdown("### 🔧 特征选择")
 
@@ -59,108 +59,130 @@ for i in range(15):
             key=f"f{i+1}"
         )
 
+# 👉 当前组合（新增保留）
+feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
+st.markdown(
+    f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
+    当前特征组合: <b>[{', '.join(feat_values)}]</b>
+    </div>""",
+    unsafe_allow_html=True
+)
+
 analyze = st.button("分析模型结果")
 
 # ======================
-# 可行性判断函数
+# 可行性规则
 # ======================
 def is_feasible(f):
-    if f["feature_2"] == 1 and f["feature_3"] != 1:
-        return False
-    if f["feature_4"] == 1 and (f["feature_5"] != 1 or f["feature_6"] != 1):
-        return False
-    if f["feature_5"] == 1 and f["feature_6"] != 1:
-        return False
-    if f["feature_7"] == 1 and f["feature_8"] != 1:
-        return False
-    if f["feature_9"] == 1 and f["feature_10"] != 1:
-        return False
-    if f["feature_11"] == 1 and (f["feature_12"] != 1 or f["feature_13"] != 1 or f["feature_14"] != 1):
-        return False
-    if f["feature_12"] == 1 and (f["feature_13"] != 1 or f["feature_14"] != 1):
-        return False
-    if f["feature_13"] == 1 and f["feature_14"] != 1:
-        return False
+    if f["feature_2"] == 1 and f["feature_3"] != 1: return False
+    if f["feature_4"] == 1 and (f["feature_5"] != 1 or f["feature_6"] != 1): return False
+    if f["feature_5"] == 1 and f["feature_6"] != 1: return False
+    if f["feature_7"] == 1 and f["feature_8"] != 1: return False
+    if f["feature_9"] == 1 and f["feature_10"] != 1: return False
+    if f["feature_11"] == 1 and (f["feature_12"] != 1 or f["feature_13"] != 1 or f["feature_14"] != 1): return False
+    if f["feature_12"] == 1 and (f["feature_13"] != 1 or f["feature_14"] != 1): return False
+    if f["feature_13"] == 1 and f["feature_14"] != 1: return False
     return True
 
 # ======================
-# 下：仪表盘
+# 仪表盘
 # ======================
 if analyze:
 
     feasible = is_feasible(selected_features)
 
-    if not feasible:
-        mean_val = 0
-        pos_ratio = 0
-        neg_ratio = 0
-    else:
+    if feasible:
+        # ✅ 正确匹配方式（修复核心BUG）
         match_mask = pd.Series([True] * len(df_features))
         for k, v in selected_features.items():
             match_mask &= (df_features[k] == v)
 
-        matched_ids = df_features.loc[match_mask, "id"].values
+        df_merge = df_features[match_mask].merge(df_results, on="id", how="inner")
 
-        all_results = []
-        for mid in matched_ids:
-            if mid in df_results["id"].values:
-                vals = df_results[df_results["id"] == mid].drop(columns=["id"]).values.flatten()
-                all_results.extend(vals)
+        if len(df_merge) == 0:
+            st.error("未匹配到数据")
+            all_results = np.array([])
+        else:
+            all_results = df_merge.drop(columns=["id"]).values.flatten()
+    else:
+        all_results = np.array([])
 
-        all_results = np.array(all_results)
-
-        mean_val = float(np.mean(all_results)) if len(all_results) else 0
-        pos_ratio = np.sum(all_results > 0) / len(all_results) if len(all_results) else 0
-        neg_ratio = np.sum(all_results < 0) / len(all_results) if len(all_results) else 0
+    # ======================
+    # 计算指标
+    # ======================
+    if len(all_results) > 0:
+        mean_val = float(np.mean(all_results))
+        pos_ratio = np.sum(all_results > 0) / len(all_results)
+        neg_ratio = np.sum(all_results < 0) / len(all_results)
+    else:
+        mean_val = 0
+        pos_ratio = 0
+        neg_ratio = 0
 
     st.markdown("### 🎯 模型分析仪表盘")
-
     g1, g2, g3 = st.columns(3)
 
-    # 正占比
+    # ======================
+    # 1️⃣ 大于0（红）
+    # ======================
     with g1:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=pos_ratio * 100,
-            number={"suffix": "%"},
-            title={"text": "大于0占比"},
-            gauge={"axis": {"range": [0, 100]}}
+            number={"suffix": "%", "font": {"size": 28}},
+            title={"text": "Predicted probability that override harms train punctuality"},
+            gauge={"axis": {"range": [0, 100]},
+                   "bar": {"color": "red"}}
         ))
+        fig.update_layout(height=260)
         st.plotly_chart(fig, use_container_width=True)
 
-    # 均值
+    # ======================
+    # 2️⃣ 均值（蓝）
+    # ======================
     with g2:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=mean_val,
-            number={"valueformat": ".2f"},
-            title={"text": "均值"},
-            gauge={"axis": {"range": [-1, 1]}}
+            number={"font": {"size": 28}},
+            title={"text": "Per train section dredicted change in train delay if overriden"},
+            gauge={"axis": {"range": [-1, 1]},
+                   "bar": {"color": "blue"}}
         ))
+        fig.update_layout(height=260)
         st.plotly_chart(fig, use_container_width=True)
 
-    # 负占比（新增）
+        st.markdown(
+            f"<div class='center-text'><b>{mean_val:.2f} seconds</b></div>",
+            unsafe_allow_html=True
+        )
+
+    # ======================
+    # 3️⃣ 小于0（绿）
+    # ======================
     with g3:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=neg_ratio * 100,
-            number={"suffix": "%"},
-            title={"text": "小于0占比"},
-            gauge={"axis": {"range": [0, 100]}}
+            number={"suffix": "%", "font": {"size": 28}},
+            title={"text": "Predicted probability that override improves train punctuality"},
+            gauge={"axis": {"range": [0, 100]},
+                   "bar": {"color": "green"}}
         ))
+        fig.update_layout(height=260)
         st.plotly_chart(fig, use_container_width=True)
 
     # ======================
-    # 可行性提示（关键）
+    # 可行性提示
     # ======================
     if feasible:
         st.markdown(
-            "<div class='center-text'><b>Feasible feature combination</b></div>",
+            "<div style='text-align:center; font-size:16px;'><b>Feasible feature combination</b></div>",
             unsafe_allow_html=True
         )
     else:
         st.markdown(
-            "<div class='center-text' style='color:red;'><b>Infeasible feature combination</b></div>",
+            "<div style='text-align:center; color:red; font-size:16px;'><b>Infeasible feature combination</b></div>",
             unsafe_allow_html=True
         )
 
