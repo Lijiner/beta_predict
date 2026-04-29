@@ -193,8 +193,7 @@ if analyze:
             value=neg_ratio * 100,
             number={"suffix": "%", "font": {"size": 25}},
             gauge={"axis": {"range": [0, 100],"tickfont": {"size": 20}},
-                   "bar": {"color": "#059669"},
-                  "tickfont": {"size": 20} 
+                   "bar": {"color": "#059669"}
                   }
         ))
         fig.update_layout(height=420)
