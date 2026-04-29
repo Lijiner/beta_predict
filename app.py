@@ -133,7 +133,7 @@ if analyze:
     # ======================
     with g1:
         st.markdown(
-            "<div style='text-align:center; font-weight:800; font-size:20px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:30px;'>"
             "Predicted probability that override harms train punctuality"
             "</div>",
             unsafe_allow_html=True
@@ -154,7 +154,7 @@ if analyze:
     # ======================
     with g2:
         st.markdown(
-            "<div style='text-align:center; font-weight:800; font-size:20px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:30px;'>"
             "Predicted change in train delay if overriden "
             "</div>",
             unsafe_allow_html=True
@@ -181,7 +181,7 @@ if analyze:
     # ======================
     with g3:
         st.markdown(
-            "<div style='text-align:center; font-weight:800; font-size:20px;'>"
+            "<div style='text-align:center; font-weight:700; font-size:30px;'>"
             "Predicted probability that override improves train punctuality"
             "</div>",
             unsafe_allow_html=True
