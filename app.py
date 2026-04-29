@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="结果可视化分析", layout="wide")
+st.set_page_config(page_title="The Prototyped Decision Support System", layout="wide")
 
 # ======================
 # 样式
@@ -24,9 +24,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">🎯 模型结果可视化分析</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">选择15个特征值，查看模型结果</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="main-title">The Prototyped Decision Support System</div>', unsafe_allow_html=True)
 # ======================
 # 数据加载
 # ======================
@@ -42,7 +40,7 @@ df_features, df_results = load_data()
 # ======================
 # 特征选择
 # ======================
-st.markdown("### 🔧 特征选择")
+st.markdown("### Select a value for each feature")
 
 cols = st.columns(15)
 selected_features = {}
@@ -63,12 +61,12 @@ for i in range(15):
 feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
 st.markdown(
     f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
-    当前特征组合: <b>[{', '.join(feat_values)}]</b>
+    Current feature combination: <b>[{', '.join(feat_values)}]</b>
     </div>""",
     unsafe_allow_html=True
 )
 
-analyze = st.button("分析模型结果")
+analyze = st.button("START")
 
 # ======================
 # 规则校验
@@ -164,7 +162,7 @@ if analyze:
 
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
-            value=mean_val,
+            value=f"{mean_val:.2f} seconds",
             number={"font": {"size": 40}},
             gauge={
                 "axis": {"range": [gauge_min, gauge_max]},
@@ -173,13 +171,6 @@ if analyze:
         ))
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown(
-            f"<div style='text-align:center; font-size:13px; color:#6b7280;'>"
-            f"{mean_val:.2f} seconds"
-            "</div>",
-            unsafe_allow_html=True
-        )
 
     # ======================
     # 3️⃣ 小于0（绿）
