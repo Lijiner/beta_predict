@@ -78,7 +78,7 @@ def render_feature_selector():
 
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
     st.markdown(
-        f"""<<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
+        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
         Current feature combination: <b>[{', '.join(feat_values)}]</b>
         </div>""",
         unsafe_allow_html=True
