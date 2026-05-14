@@ -118,7 +118,7 @@ def render_feature_selector():
 
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
     st.markdown(
-        f"""<<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
+        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
         Current feature combination: <b>[{', '.join(feat_values)}]</b>
         </div>""",
         unsafe_allow_html=True
@@ -257,6 +257,6 @@ if analyze:
     if feasible:
         st.markdown("<div style='text-align:center;font-size:28px;'><b>Feasible scenario （Decision support provided）</b></div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible scenario （Decision support does not provided）</b></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible scenario （Decision support not provided）</b></div>", unsafe_allow_html=True)
 
 st.markdown("---")
