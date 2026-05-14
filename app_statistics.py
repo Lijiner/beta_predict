@@ -19,6 +19,13 @@ st.markdown("""
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     text-align: center;
+    margin-bottom: 10px;
+}
+.feature-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 6px;
 }
 .center-text { text-align:center; margin-top:10px; font-size:14px; }
 </style>
@@ -55,30 +62,63 @@ except AttributeError:
             return func
 
 # ======================
-# 特征选择
+# Feature 定义（名称 + 描述）
+# ======================
+FEATURE_DEFS = [
+    ("F1",  "number_incident = 0"),
+    ("F2",  "length_incident = 0"),
+    ("F3",  "length_incident <= 3"),
+    ("F4",  "density <= 0.15"),
+    ("F5",  "density <= 0.28"),
+    ("F6",  "density <= 0.45"),
+    ("F7",  "conflict = 0"),
+    ("F8",  "conflict <= 0.25"),
+    ("F9",  "redlights = 0"),
+    ("F10", "redlights <= 0.25"),
+    ("F11", "zonehour_typical_workload = 1"),
+    ("F12", "zonehour_typical_workload <= 2"),
+    ("F13", "zonehour_typical_workload <= 3"),
+    ("F14", "zonehour_typical_workload <= 4"),
+    ("F15", "peak = 1"),
+]
+
+# ======================
+# 特征选择（3 行 × 5 列 布局）
 # ======================
 @fragment
 def render_feature_selector():
     st.markdown("### Select a value for each feature")
 
-    cols = st.columns(15)
     selected_features = {}
 
-    for i in range(15):
-        with cols[i]:
-            st.markdown(f"<div class='feature-box'><b>F{i+1}</b></div>", unsafe_allow_html=True)
-            selected_features[f"feature_{i+1}"] = st.radio(
-                label=f"feature_{i+1}",
-                options=[0, 1],
-                index=0,
-                horizontal=True,
-                label_visibility="collapsed",
-                key=f"f{i+1}"
-            )
+    # 3 行，每行 5 列
+    for row_idx in range(3):
+        cols = st.columns(5)
+        for col_idx in range(5):
+            feat_idx = row_idx * 5 + col_idx      # 0-based
+            feat_num = feat_idx + 1                 # 1-based (F1~F15)
+            feat_key = f"feature_{feat_num}"
+            feat_label, feat_desc = FEATURE_DEFS[feat_idx]
+
+            with cols[col_idx]:
+                st.markdown(
+                    f"<div class='feature-box'>"
+                    f"<div class='feature-label'>{feat_label}: {feat_desc}</div>"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+                selected_features[feat_key] = st.radio(
+                    label=f"feature_{feat_num}",
+                    options=[False, True],
+                    index=0,
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key=f"f{feat_num}"
+                )
 
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
     st.markdown(
-        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
+        f"""<<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
         Current feature combination: <b>[{', '.join(feat_values)}]</b>
         </div>""",
         unsafe_allow_html=True
@@ -92,17 +132,20 @@ st.markdown("<br>", unsafe_allow_html=True)
 analyze = st.button("START")
 
 # ======================
-# 规则校验
+# 规则校验（自动将 bool 转为 0/1）
 # ======================
 def is_feasible(f):
-    if f["feature_2"] == 1 and f["feature_3"] != 1: return False
-    if f["feature_4"] == 1 and (f["feature_5"] != 1 or f["feature_6"] != 1): return False
-    if f["feature_5"] == 1 and f["feature_6"] != 1: return False
-    if f["feature_7"] == 1 and f["feature_8"] != 1: return False
-    if f["feature_9"] == 1 and f["feature_10"] != 1: return False
-    if f["feature_11"] == 1 and (f["feature_12"] != 1 or f["feature_13"] != 1 or f["feature_14"] != 1): return False
-    if f["feature_12"] == 1 and (f["feature_13"] != 1 or f["feature_14"] != 1): return False
-    if f["feature_13"] == 1 and f["feature_14"] != 1: return False
+    # 统一转为 0/1，兼容 CSV 数据格式
+    fv = {k: (1 if v else 0) for k, v in f.items()}
+
+    if fv["feature_2"] == 1 and fv["feature_3"] != 1: return False
+    if fv["feature_4"] == 1 and (fv["feature_5"] != 1 or fv["feature_6"] != 1): return False
+    if fv["feature_5"] == 1 and fv["feature_6"] != 1: return False
+    if fv["feature_7"] == 1 and fv["feature_8"] != 1: return False
+    if fv["feature_9"] == 1 and fv["feature_10"] != 1: return False
+    if fv["feature_11"] == 1 and (fv["feature_12"] != 1 or fv["feature_13"] != 1 or fv["feature_14"] != 1): return False
+    if fv["feature_12"] == 1 and (fv["feature_13"] != 1 or fv["feature_14"] != 1): return False
+    if fv["feature_13"] == 1 and fv["feature_14"] != 1: return False
     return True
 
 # ======================
@@ -116,7 +159,7 @@ if analyze:
         # 在 feature_combinations 中找到完全匹配的行
         match_mask = pd.Series([True] * len(df_features))
         for k, v in selected_features.items():
-            match_mask &= (df_features[k] == v)
+            match_mask &= (df_features[k] == (1 if v else 0))
 
         matched_ids = df_features.loc[match_mask, "id"]
 
@@ -209,11 +252,11 @@ if analyze:
         st.plotly_chart(fig, use_container_width=True)
 
     # ======================
-    # 可行性提示
+    # 可行性提示（文案已更新）
     # ======================
     if feasible:
-        st.markdown("<div style='text-align:center;font-size:28px;'><b>Feasible feature combination</b></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;font-size:28px;'><b>Feasible scenario （Decision support provided）</b></div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible feature combination</b></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible scenario （Decision support does not provided）</b></div>", unsafe_allow_html=True)
 
 st.markdown("---")
