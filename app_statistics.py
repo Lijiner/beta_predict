@@ -22,7 +22,7 @@ st.markdown("""
     margin-bottom: 10px;
 }
 .feature-label {
-    font-size: 1.1rem;
+    font-size: 14px;
     font-weight: 600;
     line-height: 1.2;
     margin-bottom: 6px;
