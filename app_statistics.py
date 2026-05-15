@@ -15,17 +15,22 @@ st.markdown("""
 .main-title { font-size: 2.2rem; font-weight: bold; text-align: center; }
 .sub-title { font-size: 1rem; text-align: center; margin-bottom: 1rem; }
 .feature-box {
-    padding: 6px;
+    padding: 12px 8px;        
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     text-align: center;
     margin-bottom: 10px;
+    min-height: 90px;        
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;     
 }
 .feature-label {
-    font-size: 14px;
+    font-size: 16px;         
     font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 6px;
+    line-height: 1.3;
+    margin-bottom: 8px;    
 }
 .row-title {
     font-size: 16px;
