@@ -27,6 +27,15 @@ st.markdown("""
     line-height: 1.2;
     margin-bottom: 6px;
 }
+.row-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #374151;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-left: 4px;
+    border-left: 4px solid #2563eb;
+}
 .center-text { text-align:center; margin-top:10px; font-size:14px; }
 </style>
 """, unsafe_allow_html=True)
@@ -64,46 +73,59 @@ except AttributeError:
 # ======================
 # Feature 定义（名称 + 描述）
 # ======================
-FEATURE_DEFS = [
-    ("F1",  "number_incident = 0"),
-    ("F2",  "length_incident = 0"),
-    ("F3",  "length_incident <= 3"),
-    ("F4",  "density <= 0.15"),
-    ("F5",  "density <= 0.28"),
-    ("F6",  "density <= 0.45"),
-    ("F7",  "conflict = 0"),
-    ("F8",  "conflict <= 0.25"),
-    ("F9",  "redlights = 0"),
-    ("F10", "redlights <= 0.25"),
-    ("F11", "zonehour_typical_workload = 1"),
-    ("F12", "zonehour_typical_workload <= 2"),
-    ("F13", "zonehour_typical_workload <= 3"),
-    ("F14", "zonehour_typical_workload <= 4"),
-    ("F15", "peak = 1"),
+FEATURE_DEFS = {
+    "F1":  "number_incident = 0",
+    "F2":  "length_incident = 0",
+    "F3":  "length_incident <= 3",
+    "F4":  "density <= 0.15",
+    "F5":  "density <= 0.28",
+    "F6":  "density <= 0.45",
+    "F7":  "conflict = 0",
+    "F8":  "conflict <= 0.25",
+    "F9":  "redlights = 0",
+    "F10": "redlights <= 0.25",
+    "F11": "zonehour_typical_workload = 1",
+    "F12": "zonehour_typical_workload <= 2",
+    "F13": "zonehour_typical_workload <= 3",
+    "F14": "zonehour_typical_workload <= 4",
+    "F15": "peak = 1",
+}
+
+# 定义每行的分组：每行是一个列表，包含 (行标题, [该行要显示的F编号列表])
+FEATURE_ROWS = [
+    ("Select a value regarding number_incident", ["F1"]),
+    ("Select a value regarding length_incident", ["F2", "F3"]),
+    ("Select a value regarding density", ["F4", "F5", "F6"]),
+    ("Select a value regarding conflict", ["F7", "F8"]),
+    ("Select a value regarding redlights", ["F9", "F10"]),
+    ("Select a value regarding zonehour_typical_workload", ["F11", "F12", "F13", "F14"]),
+    ("Select a value regarding peak", ["F15"]),
 ]
 
 # ======================
-# 特征选择（3 行 × 5 列 布局）
+# 特征选择（按逻辑分组布局）
 # ======================
 @fragment
 def render_feature_selector():
-    st.markdown("### Select a value for each feature")
-
     selected_features = {}
 
-    # 3 行，每行 5 列
-    for row_idx in range(3):
-        cols = st.columns(5)
-        for col_idx in range(5):
-            feat_idx = row_idx * 5 + col_idx      # 0-based
-            feat_num = feat_idx + 1                 # 1-based (F1~F15)
+    for row_title, feat_ids in FEATURE_ROWS:
+        # 行标题
+        st.markdown(f"<div class='row-title'>{row_title}</div>", unsafe_allow_html=True)
+        
+        # 根据该行特征数量决定列数
+        n_cols = len(feat_ids)
+        cols = st.columns(n_cols)
+        
+        for col_idx, feat_id in enumerate(feat_ids):
+            feat_num = int(feat_id[1:])  # 从 "F1" 提取 1
             feat_key = f"feature_{feat_num}"
-            feat_label, feat_desc = FEATURE_DEFS[feat_idx]
+            feat_desc = FEATURE_DEFS[feat_id]
 
             with cols[col_idx]:
                 st.markdown(
                     f"<div class='feature-box'>"
-                    f"<div class='feature-label'>{feat_label}: {feat_desc}</div>"
+                    f"<div class='feature-label'>{feat_id}: {feat_desc}</div>"
                     f"</div>",
                     unsafe_allow_html=True
                 )
@@ -118,7 +140,7 @@ def render_feature_selector():
 
     feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
     st.markdown(
-        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
+        f"""<<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
         Current feature combination: <b>[{', '.join(feat_values)}]</b>
         </div>""",
         unsafe_allow_html=True
