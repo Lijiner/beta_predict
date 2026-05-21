@@ -267,7 +267,7 @@ if analyze:
     desc_text = "; ".join(desc_list)
     st.markdown(
         f"""<div style="background:#f3f4f6; padding:12px; border-radius:6px; margin-top:10px; margin-bottom:10px;">
-        <b>Current scenario:</b> {desc_text}
+        <b>Current feature combination:</b> {desc_text}
         </div>""",
         unsafe_allow_html=True
     )
