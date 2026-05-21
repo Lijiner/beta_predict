@@ -14,21 +14,6 @@ st.markdown("""
 <style>
 .main-title { font-size: 2.2rem; font-weight: bold; text-align: center; }
 .sub-title { font-size: 1rem; text-align: center; margin-bottom: 1rem; }
-.category-box {
-    padding: 10px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    text-align: center;
-    margin-bottom: 10px;
-    background: #fafafa;
-}
-.category-label {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.3;
-    margin-bottom: 8px;
-    color: #374151;
-}
 .row-title {
     font-size: 16px;
     font-weight: 700;
@@ -38,7 +23,6 @@ st.markdown("""
     padding-left: 4px;
     border-left: 4px solid #2563eb;
 }
-.center-text { text-align:center; margin-top:10px; font-size:14px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,8 +56,6 @@ except AttributeError:
 # ======================
 # 类别定义：用户可见的选项 → 后台特征映射
 # ======================
-
-# number_incident: 2 categories
 NUMBER_INCIDENT_CATS = {
     "number_incident = 0": {"feature_1": True},
     "number_incident ≠ 0": {"feature_1": False},
@@ -123,7 +105,6 @@ PEAK_CATS = {
     "peak ≠ 1": {"feature_15": False},
 }
 
-# 所有类别组定义：(行标题, 类别字典, radio的key)
 CATEGORY_GROUPS = [
     ("Select incident count category", NUMBER_INCIDENT_CATS, "cat_number_incident"),
     ("Select incident length category", LENGTH_INCIDENT_CATS, "cat_length_incident"),
@@ -154,14 +135,6 @@ def render_category_selector():
             key=radio_key
         )
 
-        # 显示选中类别的描述框
-        st.markdown(
-            f"""<div style="background:#eff6ff; padding:8px; border-radius:6px; margin-bottom:12px; border-left:3px solid #2563eb;">
-            <b>Selected:</b> {selected_label}
-            </div>""",
-            unsafe_allow_html=True
-        )
-
         selected_categories[radio_key] = selected_label
 
     return selected_categories
@@ -178,7 +151,6 @@ def categories_to_features(categories):
     """将用户选择的类别标签转换为 feature_1 ~ feature_15 的布尔值字典"""
     features = {}
 
-    # 从每个类别组提取特征值
     all_cat_dicts = [
         NUMBER_INCIDENT_CATS,
         LENGTH_INCIDENT_CATS,
@@ -194,7 +166,6 @@ def categories_to_features(categories):
         feat_mapping = cat_dict[selected_label]
         features.update(feat_mapping)
 
-    # 确保所有15个特征都存在
     for i in range(1, 16):
         key = f"feature_{i}"
         if key not in features:
@@ -203,7 +174,74 @@ def categories_to_features(categories):
     return features
 
 # ======================
-# 规则校验（自动将 bool 转为 0/1）
+# 将特征字典转换为人类可读的描述列表
+# ======================
+def features_to_description(features):
+    """将 feature_1 ~ feature_15 转换为人类可读的条件描述列表"""
+    descs = []
+
+    # number_incident
+    if features["feature_1"]:
+        descs.append("number_incident = 0")
+    else:
+        descs.append("number_incident > 0")
+
+    # length_incident
+    if features["feature_2"]:
+        descs.append("length_incident = 0")
+    elif features["feature_3"]:
+        descs.append("0 < length_incident ≤ 3")
+    else:
+        descs.append("length_incident > 3")
+
+    # density
+    if features["feature_4"]:
+        descs.append("density ≤ 0.15")
+    elif features["feature_5"]:
+        descs.append("0.15 < density ≤ 0.28")
+    elif features["feature_6"]:
+        descs.append("0.28 < density ≤ 0.45")
+    else:
+        descs.append("density > 0.45")
+
+    # conflict
+    if features["feature_7"]:
+        descs.append("conflict = 0")
+    elif features["feature_8"]:
+        descs.append("0 < conflict ≤ 0.25")
+    else:
+        descs.append("conflict > 0.25")
+
+    # redlights
+    if features["feature_9"]:
+        descs.append("redlights = 0")
+    elif features["feature_10"]:
+        descs.append("0 < redlights ≤ 0.25")
+    else:
+        descs.append("redlights > 0.25")
+
+    # zonehour_typical_workload
+    if features["feature_11"]:
+        descs.append("zonehour_typical_workload ≤ 1")
+    elif features["feature_12"]:
+        descs.append("1 < zonehour_typical_workload ≤ 2")
+    elif features["feature_13"]:
+        descs.append("2 < zonehour_typical_workload ≤ 3")
+    elif features["feature_14"]:
+        descs.append("3 < zonehour_typical_workload ≤ 4")
+    else:
+        descs.append("zonehour_typical_workload > 4")
+
+    # peak
+    if features["feature_15"]:
+        descs.append("peak = 1")
+    else:
+        descs.append("peak = 0")
+
+    return descs
+
+# ======================
+# 规则校验
 # ======================
 def is_feasible(f):
     fv = {k: (1 if v else 0) for k, v in f.items()}
@@ -222,14 +260,14 @@ def is_feasible(f):
 # 仪表盘
 # ======================
 if analyze:
-    # 转换为用户选择的特征
     selected_features = categories_to_features(selected_categories)
 
-    # 显示当前特征组合（调试用，可隐藏）
-    feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
+    # 显示人类可读的条件组合
+    desc_list = features_to_description(selected_features)
+    desc_text = "; ".join(desc_list)
     st.markdown(
-        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
-        Current feature combination: <b>[{', '.join(feat_values)}]</b>
+        f"""<div style="background:#f3f4f6; padding:12px; border-radius:6px; margin-top:10px; margin-bottom:10px;">
+        <b>Current scenario:</b> {desc_text}
         </div>""",
         unsafe_allow_html=True
     )
