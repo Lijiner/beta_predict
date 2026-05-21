@@ -14,18 +14,20 @@ st.markdown("""
 <style>
 .main-title { font-size: 2.2rem; font-weight: bold; text-align: center; }
 .sub-title { font-size: 1rem; text-align: center; margin-bottom: 1rem; }
-.feature-box {
-    padding: 6px;
+.category-box {
+    padding: 10px;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border-radius: 8px;
     text-align: center;
     margin-bottom: 10px;
+    background: #fafafa;
 }
-.feature-label {
-    font-size: 16px;
+.category-label {
+    font-size: 14px;
     font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 6px;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    color: #374151;
 }
 .row-title {
     font-size: 16px;
@@ -43,19 +45,16 @@ st.markdown("""
 st.markdown('<div class="main-title">The Prototyped Decision Support System</div>', unsafe_allow_html=True)
 
 # ======================
-# 数据加载（改造：加载预计算统计结果）
+# 数据加载
 # ======================
 @st.cache_data
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     df_features = pd.read_csv(os.path.join(base_dir, "feature_combinations.csv"))
-    # 加载由 process_beta_data.py 生成的预计算统计结果
     df_stats = pd.read_csv(os.path.join(base_dir, "beta2000_statistics.csv"))
     return df_features, df_stats
 
 df_features, df_stats = load_data()
-
-# 确定统计文件的 id 列（第一列）
 stats_id_col = df_stats.columns[0]
 
 # ======================
@@ -71,93 +70,142 @@ except AttributeError:
             return func
 
 # ======================
-# Feature 定义（名称 + 描述）
+# 类别定义：用户可见的选项 → 后台特征映射
 # ======================
-FEATURE_DEFS = {
-    "F1":  "number_incident = 0",
-    "F2":  "length_incident = 0",
-    "F3":  "length_incident <= 3",
-    "F4":  "density <= 0.15",
-    "F5":  "density <= 0.28",
-    "F6":  "density <= 0.45",
-    "F7":  "conflict = 0",
-    "F8":  "conflict <= 0.25",
-    "F9":  "redlights = 0",
-    "F10": "redlights <= 0.25",
-    "F11": "zonehour_typical_workload = 1",
-    "F12": "zonehour_typical_workload <= 2",
-    "F13": "zonehour_typical_workload <= 3",
-    "F14": "zonehour_typical_workload <= 4",
-    "F15": "peak = 1",
+
+# number_incident: 2 categories
+NUMBER_INCIDENT_CATS = {
+    "number_incident = 0": {"feature_1": True},
+    "number_incident ≠ 0": {"feature_1": False},
 }
 
-# 定义每行的分组：每行是一个列表，包含 (行标题, [该行要显示的F编号列表])
-FEATURE_ROWS = [
-    ("Select a value regarding number_incident", ["F1"]),
-    ("Select a value regarding length_incident", ["F2", "F3"]),
-    ("Select a value regarding density", ["F4", "F5", "F6"]),
-    ("Select a value regarding conflict", ["F7", "F8"]),
-    ("Select a value regarding redlights", ["F9", "F10"]),
-    ("Select a value regarding zonehour_typical_workload", ["F11", "F12", "F13", "F14"]),
-    ("Select a value regarding peak", ["F15"]),
+# length_incident: 3 categories  
+LENGTH_INCIDENT_CATS = {
+    "length_incident = 0": {"feature_2": True, "feature_3": True},
+    "0 < length_incident ≤ 3": {"feature_2": False, "feature_3": True},
+    "length_incident > 3": {"feature_2": False, "feature_3": False},
+}
+
+# density: 4 categories (核心修改)
+DENSITY_CATS = {
+    "density ≤ 0.15": {"feature_4": True, "feature_5": True, "feature_6": True},
+    "0.15 < density ≤ 0.28": {"feature_4": False, "feature_5": True, "feature_6": True},
+    "0.28 < density ≤ 0.45": {"feature_4": False, "feature_5": False, "feature_6": True},
+    "density > 0.45": {"feature_4": False, "feature_5": False, "feature_6": False},
+}
+
+# conflict: 3 categories
+CONFLICT_CATS = {
+    "conflict = 0": {"feature_7": True, "feature_8": True},
+    "0 < conflict ≤ 0.25": {"feature_7": False, "feature_8": True},
+    "conflict > 0.25": {"feature_7": False, "feature_8": False},
+}
+
+# redlights: 3 categories
+REDLIGHTS_CATS = {
+    "redlights = 0": {"feature_9": True, "feature_10": True},
+    "0 < redlights ≤ 0.25": {"feature_9": False, "feature_10": True},
+    "redlights > 0.25": {"feature_9": False, "feature_10": False},
+}
+
+# zonehour_typical_workload: 5 categories
+WORKLOAD_CATS = {
+    "zonehour_typical_workload ≤ 1": {"feature_11": True, "feature_12": True, "feature_13": True, "feature_14": True},
+    "1 < zonehour_typical_workload ≤ 2": {"feature_11": False, "feature_12": True, "feature_13": True, "feature_14": True},
+    "2 < zonehour_typical_workload ≤ 3": {"feature_11": False, "feature_12": False, "feature_13": True, "feature_14": True},
+    "3 < zonehour_typical_workload ≤ 4": {"feature_11": False, "feature_12": False, "feature_13": False, "feature_14": True},
+    "zonehour_typical_workload > 4": {"feature_11": False, "feature_12": False, "feature_13": False, "feature_14": False},
+}
+
+# peak: 2 categories
+PEAK_CATS = {
+    "peak = 1": {"feature_15": True},
+    "peak ≠ 1": {"feature_15": False},
+}
+
+# 所有类别组定义：(行标题, 类别字典, radio的key)
+CATEGORY_GROUPS = [
+    ("Select incident count category", NUMBER_INCIDENT_CATS, "cat_number_incident"),
+    ("Select incident length category", LENGTH_INCIDENT_CATS, "cat_length_incident"),
+    ("Select traffic density category", DENSITY_CATS, "cat_density"),
+    ("Select conflict level category", CONFLICT_CATS, "cat_conflict"),
+    ("Select red light category", REDLIGHTS_CATS, "cat_redlights"),
+    ("Select workload category", WORKLOAD_CATS, "cat_workload"),
+    ("Select peak hour category", PEAK_CATS, "cat_peak"),
 ]
 
 # ======================
-# 特征选择（按逻辑分组布局）
+# 类别选择器
 # ======================
 @fragment
-def render_feature_selector():
-    selected_features = {}
+def render_category_selector():
+    selected_categories = {}
 
-    for row_title, feat_ids in FEATURE_ROWS:
-        # 行标题
+    for row_title, cat_dict, radio_key in CATEGORY_GROUPS:
         st.markdown(f"<div class='row-title'>{row_title}</div>", unsafe_allow_html=True)
-        
-        # 根据该行特征数量决定列数
-        n_cols = len(feat_ids)
-        cols = st.columns(n_cols)
-        
-        for col_idx, feat_id in enumerate(feat_ids):
-            feat_num = int(feat_id[1:])  # 从 "F1" 提取 1
-            feat_key = f"feature_{feat_num}"
-            feat_desc = FEATURE_DEFS[feat_id]
 
-            with cols[col_idx]:
-                st.markdown(
-                    f"<div class='feature-box'>"
-                    f"<div class='feature-label'>{feat_id}: {feat_desc}</div>"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
-                selected_features[feat_key] = st.radio(
-                    label=f"feature_{feat_num}",
-                    options=[False, True],
-                    index=0,
-                    horizontal=True,
-                    label_visibility="collapsed",
-                    key=f"f{feat_num}"
-                )
+        options = list(cat_dict.keys())
+        selected_label = st.radio(
+            label=radio_key,
+            options=options,
+            index=0,
+            horizontal=True,
+            label_visibility="collapsed",
+            key=radio_key
+        )
 
-    feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
-    st.markdown(
-        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
-        Current feature combination: <b>[{', '.join(feat_values)}]</b>
-        </div>""",
-        unsafe_allow_html=True
-    )
+        # 显示选中类别的描述框
+        st.markdown(
+            f"""<div style="background:#eff6ff; padding:8px; border-radius:6px; margin-bottom:12px; border-left:3px solid #2563eb;">
+            <b>Selected:</b> {selected_label}
+            </div>""",
+            unsafe_allow_html=True
+        )
 
-    return selected_features
+        selected_categories[radio_key] = selected_label
 
-selected_features = render_feature_selector()
+    return selected_categories
+
+selected_categories = render_category_selector()
 
 st.markdown("<br>", unsafe_allow_html=True)
 analyze = st.button("START")
 
 # ======================
+# 将用户选择的类别转换为特征字典
+# ======================
+def categories_to_features(categories):
+    """将用户选择的类别标签转换为 feature_1 ~ feature_15 的布尔值字典"""
+    features = {}
+
+    # 从每个类别组提取特征值
+    all_cat_dicts = [
+        NUMBER_INCIDENT_CATS,
+        LENGTH_INCIDENT_CATS,
+        DENSITY_CATS,
+        CONFLICT_CATS,
+        REDLIGHTS_CATS,
+        WORKLOAD_CATS,
+        PEAK_CATS,
+    ]
+
+    for cat_dict, radio_key in zip(all_cat_dicts, [g[2] for g in CATEGORY_GROUPS]):
+        selected_label = categories[radio_key]
+        feat_mapping = cat_dict[selected_label]
+        features.update(feat_mapping)
+
+    # 确保所有15个特征都存在
+    for i in range(1, 16):
+        key = f"feature_{i}"
+        if key not in features:
+            features[key] = False
+
+    return features
+
+# ======================
 # 规则校验（自动将 bool 转为 0/1）
 # ======================
 def is_feasible(f):
-    # 统一转为 0/1，兼容 CSV 数据格式
     fv = {k: (1 if v else 0) for k, v in f.items()}
 
     if fv["feature_2"] == 1 and fv["feature_3"] != 1: return False
@@ -174,11 +222,21 @@ def is_feasible(f):
 # 仪表盘
 # ======================
 if analyze:
+    # 转换为用户选择的特征
+    selected_features = categories_to_features(selected_categories)
+
+    # 显示当前特征组合（调试用，可隐藏）
+    feat_values = [str(selected_features[f"feature_{i}"]) for i in range(1, 16)]
+    st.markdown(
+        f"""<div style="background:#f3f4f6; padding:8px; border-radius:6px; margin-top:10px;">
+        Current feature combination: <b>[{', '.join(feat_values)}]</b>
+        </div>""",
+        unsafe_allow_html=True
+    )
 
     feasible = is_feasible(selected_features)
 
     if feasible:
-        # 在 feature_combinations 中找到完全匹配的行
         match_mask = pd.Series([True] * len(df_features))
         for k, v in selected_features.items():
             match_mask &= (df_features[k] == (1 if v else 0))
@@ -191,8 +249,6 @@ if analyze:
             pos_ratio = 0.0
             neg_ratio = 0.0
         else:
-            # 通过 id 从预计算统计文件中读取指标
-            # 统一为字符串进行比较，避免类型不匹配
             target_id = str(matched_ids.iloc[0])
             df_stats[stats_id_col] = df_stats[stats_id_col].astype(str)
             stat_row = df_stats[df_stats[stats_id_col] == target_id]
@@ -216,12 +272,9 @@ if analyze:
 
     g1, g2, g3 = st.columns(3)
 
-    # ======================
     # G1
-    # ======================
     with g1:
         st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted probability that override harms train punctuality</div>", unsafe_allow_html=True)
-
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(pos_ratio) * 100,
@@ -235,12 +288,9 @@ if analyze:
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
-    # ======================
     # G2
-    # ======================
     with g2:
         st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted change in train delay if overriden</div>", unsafe_allow_html=True)
-
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(mean_val),
@@ -254,12 +304,9 @@ if analyze:
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
-    # ======================
     # G3
-    # ======================
     with g3:
         st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted probability that override improves train punctuality</div>", unsafe_allow_html=True)
-
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(neg_ratio) * 100,
@@ -273,9 +320,7 @@ if analyze:
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
-    # ======================
-    # 可行性提示（文案已更新）
-    # ======================
+    # 可行性提示
     if feasible:
         st.markdown("<div style='text-align:center;font-size:28px;'><b>Feasible scenario （Decision support provided）</b></div>", unsafe_allow_html=True)
     else:
