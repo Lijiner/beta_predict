@@ -134,7 +134,7 @@ if analyze:
     with g1:
         st.markdown(
             "<div style='text-align:center; font-weight:700; font-size:20px;'>"
-            "Predicted probability that override harms train punctuality"
+            "Directional stability: Share of trees predicting override harms train punctuality"
             "</div>",
             unsafe_allow_html=True
         )
@@ -183,7 +183,7 @@ if analyze:
     with g3:
         st.markdown(
             "<div style='text-align:center; font-weight:700; font-size:20px;'>"
-            "Predicted probability that override improves train punctuality"
+            "Directional stability: Share of trees predicting override improves train punctuality"
             "</div>",
             unsafe_allow_html=True
         )
