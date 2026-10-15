@@ -35,7 +35,7 @@ st.markdown('<div class="main-title">The Prototyped Decision Support System</div
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     df_features = pd.read_csv(os.path.join(base_dir, "feature_combinations.csv"))
-    df_stats = pd.read_csv(os.path.join(base_dir, "ivf_result_F10.csv"))
+    df_stats = pd.read_csv(os.path.join(base_dir, "ivf_result_F10_id_trees.txt"))
     return df_features, df_stats
 
 df_features, df_stats = load_data()
