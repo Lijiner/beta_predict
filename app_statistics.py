@@ -1,0 +1,375 @@
+import sys
+import os
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+
+st.set_page_config(page_title="The Prototyped Decision Support System", layout="wide")
+
+# ======================
+# 样式
+# ======================
+st.markdown("""
+<style>
+.main-title { font-size: 2.2rem; font-weight: bold; text-align: center; }
+.sub-title { font-size: 1rem; text-align: center; margin-bottom: 1rem; }
+.row-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #374151;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-left: 4px;
+    border-left: 4px solid #2563eb;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="main-title">The Prototyped Decision Support System</div>', unsafe_allow_html=True)
+
+# ======================
+# 数据加载
+# ======================
+@st.cache_data
+def load_data():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    df_features = pd.read_csv(os.path.join(base_dir, "feature_combinations.csv"))
+    df_stats = pd.read_csv(os.path.join(base_dir, "ivf_result_F10_id_trees_statistics.csv"))
+    return df_features, df_stats
+
+df_features, df_stats = load_data()
+stats_id_col = df_stats.columns[0]
+
+# 校验统计文件的列，避免缺列时抛出 KeyError
+STATS_COLS = ("mean", "greater_0", "less_0")
+MISSING_STATS_COLS = [c for c in STATS_COLS if c not in df_stats.columns]
+
+if MISSING_STATS_COLS:
+    st.error(f"ivf_result_F10_id_trees_statistics.csv 缺少列：{', '.join(MISSING_STATS_COLS)}")
+    st.stop()
+
+# ======================
+# Fragment 兼容
+# ======================
+try:
+    fragment = st.fragment
+except AttributeError:
+    try:
+        fragment = st.experimental_fragment
+    except AttributeError:
+        def fragment(func):
+            return func
+
+# ======================
+# 类别定义：用户可见的选项 → 后台特征映射
+# ======================
+NUMBER_INCIDENT_CATS = {
+    "number_incident = 0": {"feature_1": True},
+    "number_incident ≠ 0": {"feature_1": False},
+}
+
+# length_incident: 3 categories  
+LENGTH_INCIDENT_CATS = {
+    "length_incident = 0": {"feature_2": True, "feature_3": True},
+    "0 < length_incident ≤ 3": {"feature_2": False, "feature_3": True},
+    "length_incident > 3": {"feature_2": False, "feature_3": False},
+}
+
+# density: 4 categories (核心修改)
+DENSITY_CATS = {
+    "density ≤ 0.15": {"feature_4": True, "feature_5": True, "feature_6": True},
+    "0.15 < density ≤ 0.28": {"feature_4": False, "feature_5": True, "feature_6": True},
+    "0.28 < density ≤ 0.45": {"feature_4": False, "feature_5": False, "feature_6": True},
+    "density > 0.45": {"feature_4": False, "feature_5": False, "feature_6": False},
+}
+
+# conflict: 3 categories
+CONFLICT_CATS = {
+    "conflict = 0": {"feature_7": True, "feature_8": True},
+    "0 < conflict ≤ 0.25": {"feature_7": False, "feature_8": True},
+    "conflict > 0.25": {"feature_7": False, "feature_8": False},
+}
+
+# redlights: 3 categories
+REDLIGHTS_CATS = {
+    "redlights = 0": {"feature_9": True, "feature_10": True},
+    "0 < redlights ≤ 0.25": {"feature_9": False, "feature_10": True},
+    "redlights > 0.25": {"feature_9": False, "feature_10": False},
+}
+
+# zonehour_typical_workload: 5 categories
+WORKLOAD_CATS = {
+    "zonehour_typical_workload ≤ 1": {"feature_11": True, "feature_12": True, "feature_13": True, "feature_14": True},
+    "1 < zonehour_typical_workload ≤ 2": {"feature_11": False, "feature_12": True, "feature_13": True, "feature_14": True},
+    "2 < zonehour_typical_workload ≤ 3": {"feature_11": False, "feature_12": False, "feature_13": True, "feature_14": True},
+    "3 < zonehour_typical_workload ≤ 4": {"feature_11": False, "feature_12": False, "feature_13": False, "feature_14": True},
+    "zonehour_typical_workload > 4": {"feature_11": False, "feature_12": False, "feature_13": False, "feature_14": False},
+}
+
+# peak: 2 categories
+PEAK_CATS = {
+    "peak = 1": {"feature_15": True},
+    "peak ≠ 1": {"feature_15": False},
+}
+
+CATEGORY_GROUPS = [
+    ("Select incident count category", NUMBER_INCIDENT_CATS, "cat_number_incident"),
+    ("Select incident length category", LENGTH_INCIDENT_CATS, "cat_length_incident"),
+    ("Select traffic density category", DENSITY_CATS, "cat_density"),
+    ("Select conflict level category", CONFLICT_CATS, "cat_conflict"),
+    ("Select red light category", REDLIGHTS_CATS, "cat_redlights"),
+    ("Select workload category", WORKLOAD_CATS, "cat_workload"),
+    ("Select peak hour category", PEAK_CATS, "cat_peak"),
+]
+
+# ======================
+# 类别选择器
+# ======================
+@fragment
+def render_category_selector():
+    selected_categories = {}
+
+    for row_title, cat_dict, radio_key in CATEGORY_GROUPS:
+        st.markdown(f"<div class='row-title'>{row_title}</div>", unsafe_allow_html=True)
+
+        options = list(cat_dict.keys())
+        selected_label = st.radio(
+            label=radio_key,
+            options=options,
+            index=0,
+            horizontal=True,
+            label_visibility="collapsed",
+            key=radio_key
+        )
+
+        selected_categories[radio_key] = selected_label
+
+    return selected_categories
+
+selected_categories = render_category_selector()
+
+st.markdown("<br>", unsafe_allow_html=True)
+analyze = st.button("START")
+
+# ======================
+# 将用户选择的类别转换为特征字典
+# ======================
+def categories_to_features(categories):
+    """将用户选择的类别标签转换为 feature_1 ~ feature_15 的布尔值字典"""
+    features = {}
+
+    all_cat_dicts = [
+        NUMBER_INCIDENT_CATS,
+        LENGTH_INCIDENT_CATS,
+        DENSITY_CATS,
+        CONFLICT_CATS,
+        REDLIGHTS_CATS,
+        WORKLOAD_CATS,
+        PEAK_CATS,
+    ]
+
+    for cat_dict, radio_key in zip(all_cat_dicts, [g[2] for g in CATEGORY_GROUPS]):
+        selected_label = categories[radio_key]
+        feat_mapping = cat_dict[selected_label]
+        features.update(feat_mapping)
+
+    for i in range(1, 16):
+        key = f"feature_{i}"
+        if key not in features:
+            features[key] = False
+
+    return features
+
+# ======================
+# 将特征字典转换为人类可读的描述列表
+# ======================
+def features_to_description(features):
+    """将 feature_1 ~ feature_15 转换为人类可读的条件描述列表"""
+    descs = []
+
+    # number_incident
+    if features["feature_1"]:
+        descs.append("number_incident = 0")
+    else:
+        descs.append("number_incident > 0")
+
+    # length_incident
+    if features["feature_2"]:
+        descs.append("length_incident = 0")
+    elif features["feature_3"]:
+        descs.append("0 < length_incident ≤ 3")
+    else:
+        descs.append("length_incident > 3")
+
+    # density
+    if features["feature_4"]:
+        descs.append("density ≤ 0.15")
+    elif features["feature_5"]:
+        descs.append("0.15 < density ≤ 0.28")
+    elif features["feature_6"]:
+        descs.append("0.28 < density ≤ 0.45")
+    else:
+        descs.append("density > 0.45")
+
+    # conflict
+    if features["feature_7"]:
+        descs.append("conflict = 0")
+    elif features["feature_8"]:
+        descs.append("0 < conflict ≤ 0.25")
+    else:
+        descs.append("conflict > 0.25")
+
+    # redlights
+    if features["feature_9"]:
+        descs.append("redlights = 0")
+    elif features["feature_10"]:
+        descs.append("0 < redlights ≤ 0.25")
+    else:
+        descs.append("redlights > 0.25")
+
+    # zonehour_typical_workload
+    if features["feature_11"]:
+        descs.append("zonehour_typical_workload ≤ 1")
+    elif features["feature_12"]:
+        descs.append("1 < zonehour_typical_workload ≤ 2")
+    elif features["feature_13"]:
+        descs.append("2 < zonehour_typical_workload ≤ 3")
+    elif features["feature_14"]:
+        descs.append("3 < zonehour_typical_workload ≤ 4")
+    else:
+        descs.append("zonehour_typical_workload > 4")
+
+    # peak
+    if features["feature_15"]:
+        descs.append("peak = 1")
+    else:
+        descs.append("peak = 0")
+
+    return descs
+
+# ======================
+# 规则校验
+# ======================
+def is_feasible(f):
+    fv = {k: (1 if v else 0) for k, v in f.items()}
+
+    if fv["feature_2"] == 1 and fv["feature_3"] != 1: return False
+    if fv["feature_4"] == 1 and (fv["feature_5"] != 1 or fv["feature_6"] != 1): return False
+    if fv["feature_5"] == 1 and fv["feature_6"] != 1: return False
+    if fv["feature_7"] == 1 and fv["feature_8"] != 1: return False
+    if fv["feature_9"] == 1 and fv["feature_10"] != 1: return False
+    if fv["feature_11"] == 1 and (fv["feature_12"] != 1 or fv["feature_13"] != 1 or fv["feature_14"] != 1): return False
+    if fv["feature_12"] == 1 and (fv["feature_13"] != 1 or fv["feature_14"] != 1): return False
+    if fv["feature_13"] == 1 and fv["feature_14"] != 1: return False
+    return True
+
+# ======================
+# 仪表盘
+# ======================
+if analyze:
+    selected_features = categories_to_features(selected_categories)
+
+    # 显示人类可读的条件组合
+    desc_list = features_to_description(selected_features)
+    desc_text = "; ".join(desc_list)
+    st.markdown(
+        f"""<div style="background:#f3f4f6; padding:12px; border-radius:6px; margin-top:10px; margin-bottom:10px;">
+        <b>Current feature combination:</b> {desc_text}
+        </div>""",
+        unsafe_allow_html=True
+    )
+
+    feasible = is_feasible(selected_features)
+
+    if feasible:
+        match_mask = pd.Series([True] * len(df_features))
+        for k, v in selected_features.items():
+            match_mask &= (df_features[k] == (1 if v else 0))
+
+        matched_ids = df_features.loc[match_mask, "id"]
+
+        if len(matched_ids) == 0:
+            st.error("No matching feature combination found in the dataset.")
+            mean_val = 0.0
+            pos_ratio = 0.0
+            neg_ratio = 0.0
+        else:
+            target_id = str(matched_ids.iloc[0])
+            df_stats[stats_id_col] = df_stats[stats_id_col].astype(str)
+            stat_row = df_stats[df_stats[stats_id_col] == target_id]
+
+            if len(stat_row) == 0:
+                st.error("Statistics not found for this combination.")
+                mean_val = 0.0
+                pos_ratio = 0.0
+                neg_ratio = 0.0
+            else:
+                row = stat_row.iloc[0]
+                mean_val = float(row["mean"])
+                pos_ratio = float(row["greater_0"])
+                neg_ratio = float(row["less_0"])
+    else:
+        mean_val = 0.0
+        pos_ratio = 0.0
+        neg_ratio = 0.0
+
+    gauge_min, gauge_max = -100, 100
+
+    g1, g2, g3 = st.columns(3)
+
+    # G1
+    with g1:
+        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Directional stability: Share of trees predicting override harms train punctuality</div>", unsafe_allow_html=True)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=float(pos_ratio) * 100,
+            number={"suffix": "%", "font": {"size": 25}},
+            gauge={
+                "shape": "angular",
+                "axis": {"range": [0, 100], "tickfont": {"size": 16}, "showticklabels": True},
+                "bar": {"color": "#dc2626", "thickness": 0.25}
+            }
+        ))
+        fig.update_layout(height=420)
+        st.plotly_chart(fig, use_container_width=True)
+
+    # G2
+    with g2:
+        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted change in train delay if overriden</div>", unsafe_allow_html=True)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=float(mean_val),
+            number={"suffix":" seconds per train section","valueformat": ".2f", "font": {"size": 25}},
+            gauge={
+                "shape": "angular",
+                "axis": {"range": [gauge_min, gauge_max], "tickfont": {"size": 16}, "showticklabels": True},
+                "bar": {"color": "#2563eb", "thickness": 0.25}
+            }
+        ))
+        fig.update_layout(height=420)
+        st.plotly_chart(fig, use_container_width=True)
+
+    # G3
+    with g3:
+        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Directional stability: Share of trees predicting override improves train punctuality</div>", unsafe_allow_html=True)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=float(neg_ratio) * 100,
+            number={"suffix": "%", "font": {"size": 25}},
+            gauge={
+                "shape": "angular",
+                "axis": {"range": [0, 100], "tickfont": {"size": 16}, "showticklabels": True},
+                "bar": {"color": "#059669", "thickness": 0.25}
+            }
+        ))
+        fig.update_layout(height=420)
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 可行性提示
+    if feasible:
+        st.markdown("<div style='text-align:center;font-size:28px;'><b>Feasible scenario （Decision support provided）</b></div>", unsafe_allow_html=True)
+    else:
+        st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible scenario （Decision support not provided）</b></div>", unsafe_allow_html=True)
+
+st.markdown("---")
