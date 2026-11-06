@@ -402,7 +402,6 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
         ))
 
     tick_x, tick_y = [], []
-    tick_text_x, tick_text_y, tick_text = [], [], []
     for tick_value in np.linspace(gauge_min, gauge_max, 5):
         fraction = (tick_value - gauge_min) / (gauge_max - gauge_min)
         angle = np.pi * (1 - fraction)
@@ -416,12 +415,28 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
             1.08 * np.sin(angle),
             None,
         ])
-        label_x = 1.01 * np.cos(angle)
-        if abs(np.cos(angle)) > 0.9:
-            label_x = 0.96 * np.sign(np.cos(angle))
-        tick_text_x.append(label_x)
-        tick_text_y.append(1.01 * np.sin(angle))
-        tick_text.append(f"{tick_value:.0f}")
+
+        if abs(np.cos(angle)) > 0.95:
+            label_x = 1.12 * np.sign(np.cos(angle))
+            label_y = 0.0
+            xanchor = "left" if np.cos(angle) > 0 else "right"
+            yanchor = "middle"
+        else:
+            label_radius = 1.20
+            label_x = label_radius * np.cos(angle)
+            label_y = label_radius * np.sin(angle)
+            xanchor = "center"
+            yanchor = "bottom"
+
+        fig.add_annotation(
+            x=label_x,
+            y=label_y,
+            text=f"{tick_value:.0f}",
+            showarrow=False,
+            xanchor=xanchor,
+            yanchor=yanchor,
+            font={"size": 16, "color": "#4b5563"},
+        )
 
     fig.add_trace(go.Scatter(
         x=tick_x,
@@ -431,16 +446,6 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
         hoverinfo="skip",
         showlegend=False,
     ))
-    fig.add_trace(go.Scatter(
-        x=tick_text_x,
-        y=tick_text_y,
-        mode="text",
-        text=tick_text,
-        textfont={"size": 16, "color": "#4b5563"},
-        hoverinfo="skip",
-        showlegend=False,
-    ))
-
     tail_x, tail_y = 0.0, 0.18
     tip_radius = 0.50
     tip_x = tip_radius * np.cos(needle_angle)
@@ -476,13 +481,18 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
         yref="y",
     )
     fig.add_annotation(
-        x=0.5,
-        y=0.28,
-        xref="paper",
-        yref="paper",
-        text=f"{value:.2f} seconds per train section",
+        x=0.0,
+        y=-0.12,
+        xref="x",
+        yref="y",
+        text=(
+            f"<b>{value:.2f}</b><br>"
+            "<span style='font-size:13px'>seconds per train section</span>"
+        ),
         showarrow=False,
-        font={"size": 16, "color": "#6b7280"},
+        align="center",
+        yanchor="top",
+        font={"size": 20, "color": "#374151"},
     )
 
     fig.update_layout(
@@ -490,12 +500,12 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
         xaxis={
             "visible": False,
-            "range": [-1.43, 1.43],
+            "range": [-1.50, 1.50],
             "fixedrange": True,
         },
         yaxis={
             "visible": False,
-            "range": [-0.21, 1.32],
+            "range": [-0.46, 1.32],
             "fixedrange": True,
             "scaleanchor": "x",
             "scaleratio": 1,
