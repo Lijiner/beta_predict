@@ -300,7 +300,7 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
                 "tickfont": {"size": 16},
                 "showticklabels": True,
             },
-            "bar": {"color": "rgba(0,0,0,0)", "thickness": 0.25},
+            "bar": {"color": "rgba(0,0,0,0)", "thickness": 0},
         },
     ))
 
