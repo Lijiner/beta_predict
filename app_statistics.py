@@ -289,7 +289,7 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
         mode="gauge+number",
         value=value,
         number={
-            "suffix": " seconds per train section",
+            "suffix": "<br><span style='font-size:14px'>seconds per train section</span>",
             "valueformat": ".2f",
             "font": {"size": 25},
         },
@@ -305,17 +305,17 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     ))
 
     # Plotly 的角度仪表盘没有原生指针，因此用图形坐标叠加一个箭头。
-    center_x, center_y = 0.5, 0.38
-    radius_x, radius_y = 0.34, 0.39
+    center_x, center_y = 0.5, 0.373
+    radius_x, radius_y = 0.31, 0.19
     tip_x = center_x + radius_x * np.cos(needle_angle)
     tip_y = center_y + radius_y * np.sin(needle_angle)
-    tail_x = center_x + 0.08 * radius_x * np.cos(needle_angle)
-    tail_y = center_y + 0.08 * radius_y * np.sin(needle_angle)
+    tail_x = center_x
+    tail_y = center_y
 
-    head_length_x = 0.055 * radius_x
-    head_length_y = 0.055 * radius_y
-    head_width_x = 0.022 * radius_x
-    head_width_y = 0.022 * radius_y
+    head_length_x = 0.12 * radius_x
+    head_length_y = 0.12 * radius_y
+    head_width_x = 0.055 * radius_x
+    head_width_y = 0.055 * radius_y
     base_x = tip_x - head_length_x * np.cos(needle_angle)
     base_y = tip_y - head_length_y * np.sin(needle_angle)
     perpendicular_x = -np.sin(needle_angle)
@@ -324,7 +324,7 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     fig.add_shape(
         type="path",
         path=f"M {tail_x:.6f},{tail_y:.6f} L {tip_x:.6f},{tip_y:.6f}",
-        line={"color": "#2563eb", "width": 5},
+        line={"color": "#2563eb", "width": 3},
         layer="above",
         xref="paper",
         yref="paper",
@@ -338,18 +338,6 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
             f"L {base_x - head_width_x * perpendicular_x:.6f},"
             f"{base_y - head_width_y * perpendicular_y:.6f} Z"
         ),
-        fillcolor="#2563eb",
-        line={"color": "#2563eb", "width": 1},
-        layer="above",
-        xref="paper",
-        yref="paper",
-    )
-    fig.add_shape(
-        type="circle",
-        x0=center_x - 0.012,
-        y0=center_y - 0.012,
-        x1=center_x + 0.012,
-        y1=center_y + 0.012,
         fillcolor="#2563eb",
         line={"color": "#2563eb", "width": 1},
         layer="above",
