@@ -279,7 +279,7 @@ def is_feasible(f):
 # ======================
 # 指针式仪表盘（沿用两侧仪表盘样式，并叠加箭头指针）
 # ======================
-def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
+def _make_plotly_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     value = float(value)
     value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
     value_fraction = max(0.0, min(1.0, value_fraction))
@@ -300,7 +300,7 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
                 "tickfont": {"size": 16},
                 "showticklabels": True,
             },
-            "bar": {"color": "#2563eb", "thickness": 0.25},
+            "bar": {"color": "rgba(0,0,0,0)", "thickness": 0},
         },
     ))
 
@@ -355,6 +355,131 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
 # ======================
 # 仪表盘
 # ======================
+# 纯指针仪表盘：不使用 Indicator 液柱
+def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=420):
+    value = float(value)
+    value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
+    value_fraction = max(0.0, min(1.0, value_fraction))
+    needle_angle = np.pi * (1 - value_fraction)
+
+    fig = go.Figure()
+
+    arc_angle = np.linspace(np.pi, 0, 200)
+    outer_radius = 1.0
+    inner_radius = 0.76
+
+    for radius in (outer_radius, inner_radius):
+        fig.add_trace(go.Scatter(
+            x=radius * np.cos(arc_angle),
+            y=radius * np.sin(arc_angle),
+            mode="lines",
+            line={"color": "#4b5563", "width": 1},
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    tick_x, tick_y = [], []
+    tick_text_x, tick_text_y, tick_text = [], [], []
+    for tick_value in np.linspace(gauge_min, gauge_max, 5):
+        fraction = (tick_value - gauge_min) / (gauge_max - gauge_min)
+        angle = np.pi * (1 - fraction)
+        tick_x.extend([
+            outer_radius * np.cos(angle),
+            1.08 * np.cos(angle),
+            None,
+        ])
+        tick_y.extend([
+            outer_radius * np.sin(angle),
+            1.08 * np.sin(angle),
+            None,
+        ])
+        tick_text_x.append(1.17 * np.cos(angle))
+        tick_text_y.append(1.17 * np.sin(angle))
+        tick_text.append(f"{tick_value:.0f}")
+
+    fig.add_trace(go.Scatter(
+        x=tick_x,
+        y=tick_y,
+        mode="lines",
+        line={"color": "#4b5563", "width": 1},
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+    fig.add_trace(go.Scatter(
+        x=tick_text_x,
+        y=tick_text_y,
+        mode="text",
+        text=tick_text,
+        textfont={"size": 16, "color": "#4b5563"},
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+
+    tail_x, tail_y = 0.0, -0.10
+    tip_radius = inner_radius - 0.08
+    tip_x = tip_radius * np.cos(needle_angle)
+    tip_y = tip_radius * np.sin(needle_angle)
+    head_length = 0.11
+    head_width = 0.045
+    base_x = tip_x - head_length * np.cos(needle_angle)
+    base_y = tip_y - head_length * np.sin(needle_angle)
+    perpendicular_x = -np.sin(needle_angle)
+    perpendicular_y = np.cos(needle_angle)
+
+    fig.add_shape(
+        type="path",
+        path=f"M {tail_x:.6f},{tail_y:.6f} L {tip_x:.6f},{tip_y:.6f}",
+        line={"color": "#2563eb", "width": 3},
+        layer="above",
+        xref="x",
+        yref="y",
+    )
+    fig.add_shape(
+        type="path",
+        path=(
+            f"M {tip_x:.6f},{tip_y:.6f} "
+            f"L {base_x + head_width * perpendicular_x:.6f},"
+            f"{base_y + head_width * perpendicular_y:.6f} "
+            f"L {base_x - head_width * perpendicular_x:.6f},"
+            f"{base_y - head_width * perpendicular_y:.6f} Z"
+        ),
+        fillcolor="#2563eb",
+        line={"color": "#2563eb", "width": 1},
+        layer="above",
+        xref="x",
+        yref="y",
+    )
+    fig.add_annotation(
+        x=0,
+        y=-0.28,
+        xref="x",
+        yref="y",
+        text=f"{value:.2f} seconds per train section",
+        showarrow=False,
+        font={"size": 20, "color": "#6b7280"},
+    )
+
+    fig.update_layout(
+        height=height,
+        margin={"l": 10, "r": 10, "t": 10, "b": 10},
+        xaxis={
+            "visible": False,
+            "range": [-1.35, 1.35],
+            "fixedrange": True,
+        },
+        yaxis={
+            "visible": False,
+            "range": [-0.45, 1.15],
+            "fixedrange": True,
+            "scaleanchor": "x",
+            "scaleratio": 1,
+        },
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+    )
+    return fig
+
+
 if analyze:
     selected_features = categories_to_features(selected_categories)
 
@@ -440,7 +565,7 @@ if analyze:
     # G2
     with g2:
         st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted change in train delay if overriden</div>", unsafe_allow_html=True)
-        fig = make_needle_gauge(mean_val, gauge_min=gauge_min, gauge_max=gauge_max)
+        fig = make_pointer_gauge(mean_val, gauge_min=gauge_min, gauge_max=gauge_max)
         st.plotly_chart(fig, use_container_width=True)
 
     # G3
