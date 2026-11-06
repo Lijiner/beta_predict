@@ -35,29 +35,29 @@ st.markdown('<div class="main-title">The Prototyped Decision Support System</div
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     df_features = pd.read_csv(os.path.join(base_dir, "feature_combinations.csv"))
-    df_stats = pd.read_csv(os.path.join(base_dir, "ivf_result_F10_id_trees_statistics.csv"))
+    df_stats = pd.read_csv(os.path.join(base_dir, "beta2000_statistics.csv"))
     df_webapp2 = pd.read_csv(os.path.join(base_dir, "webapp2.csv"))
     return df_features, df_stats, df_webapp2
-
 
 df_features, df_stats, df_webapp2 = load_data()
 stats_id_col = df_stats.columns[0]
 
-# 校验统计文件的列，避免缺列时抛出 KeyError
-STATS_COLS = ("mean", "greater_0", "less_0")
-MISSING_STATS_COLS = [c for c in STATS_COLS if c not in df_stats.columns]
+FEATURE_COLS = [f"feature_{i}" for i in range(1, 16)]
+MISSING_STATS_COLS = [
+    col for col in ("mean", "greater_0", "less_0")
+    if col not in df_stats.columns
+]
+MISSING_WEBAPP2_COLS = [
+    col for col in FEATURE_COLS + ["tree_used_ratio"]
+    if col not in df_webapp2.columns
+]
 
 if MISSING_STATS_COLS:
-    st.error(f"ivf_result_F10_id_trees_statistics.csv 缺少列：{', '.join(MISSING_STATS_COLS)}")
+    st.error(f"beta2000_statistics.csv is missing columns: {', '.join(MISSING_STATS_COLS)}")
     st.stop()
 
-# 校验 webapp2.csv 的列
-FEATURE_COLS = [f"feature_{i}" for i in range(1, 16)]
-WEBAPP2_REQUIRED_COLS = FEATURE_COLS + ["tree_used_ratio"]
-MISSING_WEBAPP2_COLS = [c for c in WEBAPP2_REQUIRED_COLS if c not in df_webapp2.columns]
-
 if MISSING_WEBAPP2_COLS:
-    st.error(f"webapp2.csv 缺少列：{', '.join(MISSING_WEBAPP2_COLS)}")
+    st.error(f"webapp2.csv is missing columns: {', '.join(MISSING_WEBAPP2_COLS)}")
     st.stop()
 
 # ======================
@@ -71,7 +71,6 @@ except AttributeError:
     except AttributeError:
         def fragment(func):
             return func
-
 
 # ======================
 # 类别定义：用户可见的选项 → 后台特征映射
@@ -88,7 +87,7 @@ LENGTH_INCIDENT_CATS = {
     "length_incident > 3": {"feature_2": False, "feature_3": False},
 }
 
-# density: 4 categories
+# density: 4 categories (核心修改)
 DENSITY_CATS = {
     "density ≤ 0.15": {"feature_4": True, "feature_5": True, "feature_6": True},
     "0.15 < density ≤ 0.28": {"feature_4": False, "feature_5": True, "feature_6": True},
@@ -135,7 +134,6 @@ CATEGORY_GROUPS = [
     ("Select peak hour category", PEAK_CATS, "cat_peak"),
 ]
 
-
 # ======================
 # 类别选择器
 # ======================
@@ -160,12 +158,10 @@ def render_category_selector():
 
     return selected_categories
 
-
 selected_categories = render_category_selector()
 
 st.markdown("<br>", unsafe_allow_html=True)
 analyze = st.button("START")
-
 
 # ======================
 # 将用户选择的类别转换为特征字典
@@ -195,7 +191,6 @@ def categories_to_features(categories):
             features[key] = False
 
     return features
-
 
 # ======================
 # 将特征字典转换为人类可读的描述列表
@@ -264,7 +259,6 @@ def features_to_description(features):
 
     return descs
 
-
 # ======================
 # 规则校验
 # ======================
@@ -283,113 +277,101 @@ def is_feasible(f):
 
 
 # ======================
-# 自定义指针式仪表盘（用于中间仪表盘）
+# 指针式仪表盘（仅用于中间指标）
 # ======================
 def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     value = float(value)
-
-    frac_val = (value - gauge_min) / (gauge_max - gauge_min)
-    frac_val = max(0.0, min(1.0, frac_val))
-    theta_val = np.pi * (1 - frac_val)
+    value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
+    value_fraction = max(0.0, min(1.0, value_fraction))
+    needle_angle = np.pi * (1 - value_fraction)
 
     fig = go.Figure()
 
-    # 背景半圆弧
-    theta = np.linspace(np.pi, 0, 200)
+    arc_angle = np.linspace(np.pi, 0, 200)
     fig.add_trace(go.Scatter(
-        x=np.cos(theta),
-        y=np.sin(theta),
+        x=np.cos(arc_angle),
+        y=np.sin(arc_angle),
         mode="lines",
-        line=dict(color="#e5e7eb", width=22),
+        line={"color": "#d1d5db", "width": 22},
         hoverinfo="skip",
-        showlegend=False
+        showlegend=False,
     ))
 
-    # 刻度线与刻度文字
-    tick_xs, tick_ys = [], []
-    tick_text_x, tick_text_y, tick_texts = [], [], []
-
-    for tv in np.linspace(gauge_min, gauge_max, 5):
-        frac_t = (tv - gauge_min) / (gauge_max - gauge_min)
-        th = np.pi * (1 - frac_t)
-
-        tick_xs.extend([0.90 * np.cos(th), 1.00 * np.cos(th), None])
-        tick_ys.extend([0.90 * np.sin(th), 1.00 * np.sin(th), None])
-
-        tick_text_x.append(1.14 * np.cos(th))
-        tick_text_y.append(1.14 * np.sin(th))
-        tick_texts.append(f"{tv:.0f}")
+    tick_x, tick_y = [], []
+    tick_text_x, tick_text_y, tick_text = [], [], []
+    for tick_value in np.linspace(gauge_min, gauge_max, 5):
+        fraction = (tick_value - gauge_min) / (gauge_max - gauge_min)
+        angle = np.pi * (1 - fraction)
+        tick_x.extend([0.88 * np.cos(angle), 1.00 * np.cos(angle), None])
+        tick_y.extend([0.88 * np.sin(angle), 1.00 * np.sin(angle), None])
+        tick_text_x.append(1.14 * np.cos(angle))
+        tick_text_y.append(1.14 * np.sin(angle))
+        tick_text.append(f"{tick_value:.0f}")
 
     fig.add_trace(go.Scatter(
-        x=tick_xs,
-        y=tick_ys,
+        x=tick_x,
+        y=tick_y,
         mode="lines",
-        line=dict(color="#6b7280", width=2),
+        line={"color": "#6b7280", "width": 2},
         hoverinfo="skip",
-        showlegend=False
+        showlegend=False,
     ))
-
     fig.add_trace(go.Scatter(
         x=tick_text_x,
         y=tick_text_y,
         mode="text",
-        text=tick_texts,
-        textposition="middle center",
-        textfont=dict(size=16),
+        text=tick_text,
+        textfont={"size": 16},
         hoverinfo="skip",
-        showlegend=False
+        showlegend=False,
     ))
 
-    # 指针
-    x_ptr = 0.78 * np.cos(theta_val)
-    y_ptr = 0.78 * np.sin(theta_val)
-
+    tip_x = 0.78 * np.cos(needle_angle)
+    tip_y = 0.78 * np.sin(needle_angle)
     fig.add_trace(go.Scatter(
-        x=[0, x_ptr],
-        y=[0, y_ptr],
+        x=[0, tip_x],
+        y=[0, tip_y],
         mode="lines",
-        line=dict(color="#2563eb", width=6),
+        line={"color": "#2563eb", "width": 6},
         hoverinfo="skip",
-        showlegend=False
+        showlegend=False,
     ))
-
     fig.add_trace(go.Scatter(
         x=[0],
         y=[0],
         mode="markers",
-        marker=dict(size=12, color="#2563eb"),
+        marker={"size": 14, "color": "#2563eb"},
         hoverinfo="skip",
-        showlegend=False
+        showlegend=False,
     ))
 
-    # 数值显示
     fig.add_annotation(
         x=0,
         y=-0.10,
         text=f"<b>{value:.2f}</b>",
         showarrow=False,
-        font=dict(size=25),
-        align="center"
+        font={"size": 25},
     )
-
     fig.add_annotation(
         x=0,
         y=-0.25,
         text="seconds per train section",
         showarrow=False,
-        font=dict(size=14),
-        align="center"
+        font={"size": 14},
     )
-
     fig.update_layout(
         height=height,
-        margin=dict(l=10, r=10, t=10, b=10),
-        xaxis=dict(visible=False, range=[-1.35, 1.35]),
-        yaxis=dict(visible=False, range=[-0.35, 1.25], scaleanchor="x", scaleratio=1),
+        margin={"l": 10, "r": 10, "t": 10, "b": 10},
+        xaxis={"visible": False, "range": [-1.35, 1.35]},
+        yaxis={
+            "visible": False,
+            "range": [-0.35, 1.25],
+            "scaleanchor": "x",
+            "scaleratio": 1,
+        },
         plot_bgcolor="white",
-        paper_bgcolor="white"
+        paper_bgcolor="white",
     )
-
     return fig
 
 
@@ -410,7 +392,6 @@ if analyze:
     )
 
     feasible = is_feasible(selected_features)
-
     tree_used_ratio = None
 
     if feasible:
@@ -431,7 +412,7 @@ if analyze:
             stat_row = df_stats[df_stats[stats_id_col] == target_id]
 
             if len(stat_row) == 0:
-                st.error("Statistics not found for this combination.")
+                st.error("Pre-computed statistics not found for this combination.")
                 mean_val = 0.0
                 pos_ratio = 0.0
                 neg_ratio = 0.0
@@ -441,22 +422,19 @@ if analyze:
                 pos_ratio = float(row["greater_0"])
                 neg_ratio = float(row["less_0"])
 
-        # 从 webapp2.csv 中匹配 tree_used_ratio
-        webapp2_mask = pd.Series([True] * len(df_webapp2))
+        webapp2_mask = pd.Series(True, index=df_webapp2.index)
         for k, v in selected_features.items():
-            webapp2_mask &= (df_webapp2[k].astype(int) == (1 if v else 0))
+            webapp2_mask &= df_webapp2[k].astype(int) == (1 if v else 0)
 
         matched_ratios = df_webapp2.loc[webapp2_mask, "tree_used_ratio"]
-
         if len(matched_ratios) > 0:
             raw_ratio = str(matched_ratios.iloc[0]).replace("%", "").strip()
             try:
-                tree_used_ratio = float(raw_ratio)
-                if pd.isna(tree_used_ratio):
-                    tree_used_ratio = None
+                parsed_ratio = float(raw_ratio)
+                if pd.notna(parsed_ratio):
+                    tree_used_ratio = parsed_ratio
             except (TypeError, ValueError):
-                tree_used_ratio = None
-
+                pass
     else:
         mean_val = 0.0
         pos_ratio = 0.0
@@ -466,9 +444,9 @@ if analyze:
 
     g1, g2, g3 = st.columns(3)
 
-    # G1：保持不变
+    # G1
     with g1:
-        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Directional stability: Share of trees predicting override harms train punctuality</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted probability that override harms train punctuality</div>", unsafe_allow_html=True)
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(pos_ratio) * 100,
@@ -482,15 +460,15 @@ if analyze:
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
-    # G2：改为指针式仪表盘
+    # G2
     with g2:
         st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted change in train delay if overriden</div>", unsafe_allow_html=True)
-        fig = make_needle_gauge(float(mean_val), gauge_min=gauge_min, gauge_max=gauge_max, height=420)
+        fig = make_needle_gauge(mean_val, gauge_min=gauge_min, gauge_max=gauge_max)
         st.plotly_chart(fig, use_container_width=True)
 
-    # G3：保持不变
+    # G3
     with g3:
-        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Directional stability: Share of trees predicting override improves train punctuality</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted probability that override improves train punctuality</div>", unsafe_allow_html=True)
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(neg_ratio) * 100,
@@ -504,29 +482,22 @@ if analyze:
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
-    # 可行性提示 / tree_used_ratio 显示
+    # 可保留决策树比例
     if feasible:
-        if tree_used_ratio is not None:
-            if abs(tree_used_ratio) <= 1:
-                tree_used_pct = tree_used_ratio * 100
-            else:
-                tree_used_pct = tree_used_ratio
-            ratio_text = f"{tree_used_pct:.2f}%"
-        else:
+        if tree_used_ratio is None:
             ratio_text = "N/A"
+        else:
+            tree_used_pct = tree_used_ratio * 100 if abs(tree_used_ratio) <= 1 else tree_used_ratio
+            ratio_text = f"{tree_used_pct:.2f}%"
 
         st.markdown(
-            f"<div style='text-align:center;font-size:28px;'>"
-            f"<b>Percentage of retained decision trees used to generate decision-support recommendations: {ratio_text}</b>"
-            f"</div>",
-            unsafe_allow_html=True
+            "<div style='text-align:center;font-size:28px;'>"
+            "<b>Percentage of retained decision trees used to generate "
+            f"decision-support recommendations: {ratio_text}</b>"
+            "</div>",
+            unsafe_allow_html=True,
         )
     else:
-        st.markdown(
-            "<div style='text-align:center;color:red;font-size:28px;'>"
-            "<b>Infeasible scenario （Decision support not provided）</b>"
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible scenario （Decision support not provided）</b></div>", unsafe_allow_html=True)
 
 st.markdown("---")
