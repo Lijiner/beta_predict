@@ -299,38 +299,36 @@ def is_feasible(f):
     return True
 
 
-# ======================
-# 中间指针式仪表盘
-# 文字与左右两侧数字垂直对齐
-# 指针尾部距离文字上方约15px
-# ======================
-def make_pointer_gauge(
-    value,
-    gauge_min=-100,
-    gauge_max=100,
-    height=GAUGE_HEIGHT
-):
+def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT):
+
     value = float(value)
 
     value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
     value_fraction = max(0.0, min(1.0, value_fraction))
-
     needle_angle = np.pi * (1 - value_fraction)
 
     tick_values = np.linspace(gauge_min, gauge_max, 5)
 
     fig = go.Figure(go.Indicator(
-        mode="gauge",
+        mode="gauge+number",
         value=value,
+
+        # 使用原生数字组件，与左右两侧数字采用相同定位方式
+        number={
+            "suffix": " seconds per train section",
+            "valueformat": ".2f",
+            "font": {
+                "size": 15,
+                "color": "#374151"
+            }
+        },
+
         gauge={
             "shape": "angular",
             "axis": {
                 "range": [gauge_min, gauge_max],
                 "tickvals": tick_values,
-                "ticktext": [
-                    f"{tick_value:.0f}"
-                    for tick_value in tick_values
-                ],
+                "ticktext": [f"{v:.0f}" for v in tick_values],
                 "tickfont": {"size": 16},
                 "showticklabels": True,
             },
@@ -342,7 +340,7 @@ def make_pointer_gauge(
     ))
 
     # ======================
-    # 指针位置
+    # 指针
     # ======================
     center_x = 0.5
     center_y = 0.32
@@ -353,11 +351,10 @@ def make_pointer_gauge(
     tip_x = center_x + radius_x * np.cos(needle_angle)
     tip_y = center_y + radius_y * np.sin(needle_angle)
 
-    # 指针尾部：距离文字上方约15px
+    # 指针尾部位置
     tail_x = 0.5
-    tail_y = 0.216
+    tail_y = 0.15
 
-    # 指针箭头尺寸
     head_length = 0.045
     head_width = 0.018
 
@@ -370,14 +367,8 @@ def make_pointer_gauge(
     # 指针主体
     fig.add_shape(
         type="path",
-        path=(
-            f"M {tail_x:.6f},{tail_y:.6f} "
-            f"L {tip_x:.6f},{tip_y:.6f}"
-        ),
-        line={
-            "color": "#2563eb",
-            "width": 3
-        },
+        path=f"M {tail_x},{tail_y} L {tip_x},{tip_y}",
+        line={"color": "#2563eb", "width": 3},
         layer="above",
         xref="paper",
         yref="paper",
@@ -387,53 +378,22 @@ def make_pointer_gauge(
     fig.add_shape(
         type="path",
         path=(
-            f"M {tip_x:.6f},{tip_y:.6f} "
-            f"L {base_x + head_width * perpendicular_x:.6f},"
-            f"{base_y + head_width * perpendicular_y:.6f} "
-            f"L {base_x - head_width * perpendicular_x:.6f},"
-            f"{base_y - head_width * perpendicular_y:.6f} Z"
+            f"M {tip_x},{tip_y} "
+            f"L {base_x + head_width * perpendicular_x},"
+            f"{base_y + head_width * perpendicular_y} "
+            f"L {base_x - head_width * perpendicular_x},"
+            f"{base_y - head_width * perpendicular_y} Z"
         ),
         fillcolor="#2563eb",
-        line={
-            "color": "#2563eb",
-            "width": 1
-        },
+        line={"color": "#2563eb", "width": 1},
         layer="above",
         xref="paper",
         yref="paper",
     )
 
-    # ======================
-    # 中间文字
-    # 与左右两侧仪表盘数字垂直对齐
-    # ======================
-    fig.add_annotation(
-        x=0.5,
-        y=0.18,
-        xref="paper",
-        yref="paper",
-        text=f"<b>{value:.2f}</b> seconds per train section",
-        showarrow=False,
-        align="center",
-        xanchor="center",
-        yanchor="middle",
-        font={
-            "size": 15,
-            "color": "#374151"
-        },
-    )
-
-    # ======================
-    # 布局
-    # ======================
     fig.update_layout(
         height=height,
-        margin={
-            "l": 20,
-            "r": 20,
-            "t": 20,
-            "b": 20
-        },
+        margin={"l": 20, "r": 20, "t": 20, "b": 20},
         plot_bgcolor="white",
         paper_bgcolor="white",
     )
