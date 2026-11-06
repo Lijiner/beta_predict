@@ -35,11 +35,30 @@ st.markdown('<div class="main-title">The Prototyped Decision Support System</div
 def load_data():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     df_features = pd.read_csv(os.path.join(base_dir, "feature_combinations.csv"))
-    df_stats = pd.read_csv(os.path.join(base_dir, "ivf_result_F10_id_trees.txt"))
-    return df_features, df_stats
+    df_stats = pd.read_csv(os.path.join(base_dir, "beta2000_statistics.csv"))
+    df_webapp2 = pd.read_csv(os.path.join(base_dir, "webapp2.csv"))
+    return df_features, df_stats, df_webapp2
 
-df_features, df_stats = load_data()
+df_features, df_stats, df_webapp2 = load_data()
 stats_id_col = df_stats.columns[0]
+
+FEATURE_COLS = [f"feature_{i}" for i in range(1, 16)]
+MISSING_STATS_COLS = [
+    col for col in ("mean", "greater_0", "less_0")
+    if col not in df_stats.columns
+]
+MISSING_WEBAPP2_COLS = [
+    col for col in FEATURE_COLS + ["tree_used_ratio"]
+    if col not in df_webapp2.columns
+]
+
+if MISSING_STATS_COLS:
+    st.error(f"beta2000_statistics.csv is missing columns: {', '.join(MISSING_STATS_COLS)}")
+    st.stop()
+
+if MISSING_WEBAPP2_COLS:
+    st.error(f"webapp2.csv is missing columns: {', '.join(MISSING_WEBAPP2_COLS)}")
+    st.stop()
 
 # ======================
 # Fragment 兼容
@@ -61,7 +80,7 @@ NUMBER_INCIDENT_CATS = {
     "number_incident ≠ 0": {"feature_1": False},
 }
 
-# length_incident: 3 categories  
+# length_incident: 3 categories
 LENGTH_INCIDENT_CATS = {
     "length_incident = 0": {"feature_2": True, "feature_3": True},
     "0 < length_incident ≤ 3": {"feature_2": False, "feature_3": True},
@@ -256,6 +275,83 @@ def is_feasible(f):
     if fv["feature_13"] == 1 and fv["feature_14"] != 1: return False
     return True
 
+
+# ======================
+# 指针式仪表盘（沿用两侧仪表盘样式，并叠加箭头指针）
+# ======================
+def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
+    value = float(value)
+    value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
+    value_fraction = max(0.0, min(1.0, value_fraction))
+    needle_angle = np.pi * (1 - value_fraction)
+
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=value,
+        number={
+            "suffix": " seconds per train section",
+            "valueformat": ".2f",
+            "font": {"size": 20},
+        },
+        gauge={
+            "shape": "angular",
+            "axis": {
+                "range": [gauge_min, gauge_max],
+                "tickfont": {"size": 16},
+                "showticklabels": True,
+            },
+            "bar": {"color": "rgba(0,0,0,0)", "thickness": 0.25},
+        },
+    ))
+
+    # Plotly 的角度仪表盘没有原生指针，因此用图形坐标叠加一个箭头。
+    center_x, center_y = 0.5, 0.28
+    radius_x, radius_y = 0.347, 0.39
+    tip_x = center_x + radius_x * np.cos(needle_angle)
+    tip_y = center_y + radius_y * np.sin(needle_angle)
+    tail_x = center_x
+    tail_y = center_y
+
+    head_length_x = 0.12 * radius_x
+    head_length_y = 0.12 * radius_y
+    head_width_x = 0.055 * radius_x
+    head_width_y = 0.055 * radius_y
+    base_x = tip_x - head_length_x * np.cos(needle_angle)
+    base_y = tip_y - head_length_y * np.sin(needle_angle)
+    perpendicular_x = -np.sin(needle_angle)
+    perpendicular_y = np.cos(needle_angle)
+
+    fig.add_shape(
+        type="path",
+        path=f"M {tail_x:.6f},{tail_y:.6f} L {tip_x:.6f},{tip_y:.6f}",
+        line={"color": "#2563eb", "width": 3},
+        layer="above",
+        xref="paper",
+        yref="paper",
+    )
+    fig.add_shape(
+        type="path",
+        path=(
+            f"M {tip_x:.6f},{tip_y:.6f} "
+            f"L {base_x + head_width_x * perpendicular_x:.6f},"
+            f"{base_y + head_width_y * perpendicular_y:.6f} "
+            f"L {base_x - head_width_x * perpendicular_x:.6f},"
+            f"{base_y - head_width_y * perpendicular_y:.6f} Z"
+        ),
+        fillcolor="#2563eb",
+        line={"color": "#2563eb", "width": 1},
+        layer="above",
+        xref="paper",
+        yref="paper",
+    )
+
+    fig.update_layout(
+        height=height,
+        margin={"l": 20, "r": 20, "t": 20, "b": 20},
+    )
+    return fig
+
+
 # ======================
 # 仪表盘
 # ======================
@@ -273,6 +369,7 @@ if analyze:
     )
 
     feasible = is_feasible(selected_features)
+    tree_used_ratio = None
 
     if feasible:
         match_mask = pd.Series([True] * len(df_features))
@@ -301,6 +398,20 @@ if analyze:
                 mean_val = float(row["mean"])
                 pos_ratio = float(row["greater_0"])
                 neg_ratio = float(row["less_0"])
+
+        webapp2_mask = pd.Series(True, index=df_webapp2.index)
+        for k, v in selected_features.items():
+            webapp2_mask &= df_webapp2[k].astype(int) == (1 if v else 0)
+
+        matched_ratios = df_webapp2.loc[webapp2_mask, "tree_used_ratio"]
+        if len(matched_ratios) > 0:
+            raw_ratio = str(matched_ratios.iloc[0]).replace("%", "").strip()
+            try:
+                parsed_ratio = float(raw_ratio)
+                if pd.notna(parsed_ratio):
+                    tree_used_ratio = parsed_ratio
+            except (TypeError, ValueError):
+                pass
     else:
         mean_val = 0.0
         pos_ratio = 0.0
@@ -329,17 +440,7 @@ if analyze:
     # G2
     with g2:
         st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted change in train delay if overriden</div>", unsafe_allow_html=True)
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=float(mean_val),
-            number={"suffix":" seconds per train section","valueformat": ".2f", "font": {"size": 25}},
-            gauge={
-                "shape": "angular",
-                "axis": {"range": [gauge_min, gauge_max], "tickfont": {"size": 16}, "showticklabels": True},
-                "bar": {"color": "#2563eb", "thickness": 0.25}
-            }
-        ))
-        fig.update_layout(height=420)
+        fig = make_needle_gauge(mean_val, gauge_min=gauge_min, gauge_max=gauge_max)
         st.plotly_chart(fig, use_container_width=True)
 
     # G3
@@ -358,9 +459,21 @@ if analyze:
         fig.update_layout(height=420)
         st.plotly_chart(fig, use_container_width=True)
 
-    # 可行性提示
+    # 可保留决策树比例
     if feasible:
-        st.markdown("<div style='text-align:center;font-size:28px;'><b>Feasible scenario （Decision support provided）</b></div>", unsafe_allow_html=True)
+        if tree_used_ratio is None:
+            ratio_text = "N/A"
+        else:
+            tree_used_pct = tree_used_ratio * 100 if abs(tree_used_ratio) <= 1 else tree_used_ratio
+            ratio_text = f"{tree_used_pct:.2f}%"
+
+        st.markdown(
+            "<div style='text-align:center;font-size:28px;'>"
+            "<b>Percentage of retained decision trees used to generate "
+            f"decision-support recommendations: {ratio_text}</b>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
     else:
         st.markdown("<div style='text-align:center;color:red;font-size:28px;'><b>Infeasible scenario （Decision support not provided）</b></div>", unsafe_allow_html=True)
 
