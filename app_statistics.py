@@ -439,7 +439,7 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
     )
     fig.add_annotation(
         x=0.5,
-        y=0.312,
+        y=0.280,
         xref="paper",
         yref="paper",
         text=f"<b>{value:.2f}</b> seconds per train section",
