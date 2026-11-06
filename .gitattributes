@@ -1,0 +1,4 @@
+*.csv filter=lfs diff=lfs merge=lfs -text
+beta2000_processed.csv filter=lfs diff=lfs merge=lfs -text
+*.parquet filter=lfs diff=lfs merge=lfs -text
+beta2000_processed_without_q10.txt filter=lfs diff=lfs merge=lfs -text
