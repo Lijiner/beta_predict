@@ -277,7 +277,7 @@ def is_feasible(f):
 
 
 # ======================
-# 指针式仪表盘（仅用于中间指标）
+# 指针式仪表盘（沿用两侧仪表盘样式，并叠加箭头指针）
 # ======================
 def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     value = float(value)
@@ -285,92 +285,81 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     value_fraction = max(0.0, min(1.0, value_fraction))
     needle_angle = np.pi * (1 - value_fraction)
 
-    fig = go.Figure()
-
-    arc_angle = np.linspace(np.pi, 0, 200)
-    fig.add_trace(go.Scatter(
-        x=np.cos(arc_angle),
-        y=np.sin(arc_angle),
-        mode="lines",
-        line={"color": "#d1d5db", "width": 22},
-        hoverinfo="skip",
-        showlegend=False,
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=value,
+        number={
+            "suffix": " seconds per train section",
+            "valueformat": ".2f",
+            "font": {"size": 25},
+        },
+        gauge={
+            "shape": "angular",
+            "axis": {
+                "range": [gauge_min, gauge_max],
+                "tickfont": {"size": 16},
+                "showticklabels": True,
+            },
+            "bar": {"color": "#2563eb", "thickness": 0.25},
+        },
     ))
 
-    tick_x, tick_y = [], []
-    tick_text_x, tick_text_y, tick_text = [], [], []
-    for tick_value in np.linspace(gauge_min, gauge_max, 5):
-        fraction = (tick_value - gauge_min) / (gauge_max - gauge_min)
-        angle = np.pi * (1 - fraction)
-        tick_x.extend([0.88 * np.cos(angle), 1.00 * np.cos(angle), None])
-        tick_y.extend([0.88 * np.sin(angle), 1.00 * np.sin(angle), None])
-        tick_text_x.append(1.14 * np.cos(angle))
-        tick_text_y.append(1.14 * np.sin(angle))
-        tick_text.append(f"{tick_value:.0f}")
+    # Plotly 的角度仪表盘没有原生指针，因此用图形坐标叠加一个箭头。
+    center_x, center_y = 0.5, 0.38
+    radius_x, radius_y = 0.34, 0.39
+    tip_x = center_x + radius_x * np.cos(needle_angle)
+    tip_y = center_y + radius_y * np.sin(needle_angle)
+    tail_x = center_x + 0.08 * radius_x * np.cos(needle_angle)
+    tail_y = center_y + 0.08 * radius_y * np.sin(needle_angle)
 
-    fig.add_trace(go.Scatter(
-        x=tick_x,
-        y=tick_y,
-        mode="lines",
-        line={"color": "#6b7280", "width": 2},
-        hoverinfo="skip",
-        showlegend=False,
-    ))
-    fig.add_trace(go.Scatter(
-        x=tick_text_x,
-        y=tick_text_y,
-        mode="text",
-        text=tick_text,
-        textfont={"size": 16},
-        hoverinfo="skip",
-        showlegend=False,
-    ))
+    head_length_x = 0.055 * radius_x
+    head_length_y = 0.055 * radius_y
+    head_width_x = 0.022 * radius_x
+    head_width_y = 0.022 * radius_y
+    base_x = tip_x - head_length_x * np.cos(needle_angle)
+    base_y = tip_y - head_length_y * np.sin(needle_angle)
+    perpendicular_x = -np.sin(needle_angle)
+    perpendicular_y = np.cos(needle_angle)
 
-    tip_x = 0.78 * np.cos(needle_angle)
-    tip_y = 0.78 * np.sin(needle_angle)
-    fig.add_trace(go.Scatter(
-        x=[0, tip_x],
-        y=[0, tip_y],
-        mode="lines",
-        line={"color": "#2563eb", "width": 6},
-        hoverinfo="skip",
-        showlegend=False,
-    ))
-    fig.add_trace(go.Scatter(
-        x=[0],
-        y=[0],
-        mode="markers",
-        marker={"size": 14, "color": "#2563eb"},
-        hoverinfo="skip",
-        showlegend=False,
-    ))
-
-    fig.add_annotation(
-        x=0,
-        y=-0.10,
-        text=f"<b>{value:.2f}</b>",
-        showarrow=False,
-        font={"size": 25},
+    fig.add_shape(
+        type="path",
+        path=f"M {tail_x:.6f},{tail_y:.6f} L {tip_x:.6f},{tip_y:.6f}",
+        line={"color": "#2563eb", "width": 5},
+        layer="above",
+        xref="paper",
+        yref="paper",
     )
-    fig.add_annotation(
-        x=0,
-        y=-0.25,
-        text="seconds per train section",
-        showarrow=False,
-        font={"size": 14},
+    fig.add_shape(
+        type="path",
+        path=(
+            f"M {tip_x:.6f},{tip_y:.6f} "
+            f"L {base_x + head_width_x * perpendicular_x:.6f},"
+            f"{base_y + head_width_y * perpendicular_y:.6f} "
+            f"L {base_x - head_width_x * perpendicular_x:.6f},"
+            f"{base_y - head_width_y * perpendicular_y:.6f} Z"
+        ),
+        fillcolor="#2563eb",
+        line={"color": "#2563eb", "width": 1},
+        layer="above",
+        xref="paper",
+        yref="paper",
     )
+    fig.add_shape(
+        type="circle",
+        x0=center_x - 0.012,
+        y0=center_y - 0.012,
+        x1=center_x + 0.012,
+        y1=center_y + 0.012,
+        fillcolor="#2563eb",
+        line={"color": "#2563eb", "width": 1},
+        layer="above",
+        xref="paper",
+        yref="paper",
+    )
+
     fig.update_layout(
         height=height,
-        margin={"l": 10, "r": 10, "t": 10, "b": 10},
-        xaxis={"visible": False, "range": [-1.35, 1.35]},
-        yaxis={
-            "visible": False,
-            "range": [-0.35, 1.25],
-            "scaleanchor": "x",
-            "scaleratio": 1,
-        },
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        margin={"l": 20, "r": 20, "t": 20, "b": 20},
     )
     return fig
 
