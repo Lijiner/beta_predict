@@ -289,9 +289,9 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
         mode="gauge+number",
         value=value,
         number={
-            "suffix": "<br><span style='font-size:14px'>seconds per train section</span>",
+            "suffix": " seconds per train section",
             "valueformat": ".2f",
-            "font": {"size": 25},
+            "font": {"size": 20},
         },
         gauge={
             "shape": "angular",
@@ -305,8 +305,8 @@ def make_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     ))
 
     # Plotly 的角度仪表盘没有原生指针，因此用图形坐标叠加一个箭头。
-    center_x, center_y = 0.5, 0.373
-    radius_x, radius_y = 0.31, 0.19
+    center_x, center_y = 0.5, 0.28
+    radius_x, radius_y = 0.347, 0.39
     tip_x = center_x + radius_x * np.cos(needle_angle)
     tip_y = center_y + radius_y * np.sin(needle_angle)
     tail_x = center_x
