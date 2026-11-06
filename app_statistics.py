@@ -7,6 +7,8 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="The Prototyped Decision Support System", layout="wide")
 
+GAUGE_HEIGHT = 420
+
 # ======================
 # 样式
 # ======================
@@ -22,6 +24,27 @@ st.markdown("""
     margin-bottom: 8px;
     padding-left: 4px;
     border-left: 4px solid #2563eb;
+}
+.gauge-title {
+    height: 108px;
+    min-height: 108px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    text-align: center;
+    font-size: clamp(16px, 1.25vw, 20px);
+    font-weight: 700;
+    line-height: 1.25;
+}
+@media (max-width: 768px) {
+    .gauge-title {
+        height: 168px;
+        min-height: 168px;
+        font-size: 15px;
+        line-height: 1.2;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -356,7 +379,7 @@ def _make_plotly_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
 # 仪表盘
 # ======================
 # 纯指针仪表盘：不使用 Indicator 液柱
-def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=420):
+def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT):
     value = float(value)
     value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
     value_fraction = max(0.0, min(1.0, value_fraction))
@@ -551,7 +574,12 @@ if analyze:
 
     # G1
     with g1:
-        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted probability that override harms train punctuality</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='gauge-title'>"
+            "Predicted probability that override harms train punctuality"
+            "</div>",
+            unsafe_allow_html=True,
+        )
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(pos_ratio) * 100,
@@ -562,18 +590,28 @@ if analyze:
                 "bar": {"color": "#dc2626", "thickness": 0.25}
             }
         ))
-        fig.update_layout(height=420)
+        fig.update_layout(height=GAUGE_HEIGHT)
         st.plotly_chart(fig, use_container_width=True)
 
     # G2
     with g2:
-        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted change in train delay if overriden</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='gauge-title'>"
+            "Predicted change in train delay if overriden"
+            "</div>",
+            unsafe_allow_html=True,
+        )
         fig = make_pointer_gauge(mean_val, gauge_min=gauge_min, gauge_max=gauge_max)
         st.plotly_chart(fig, use_container_width=True)
 
     # G3
     with g3:
-        st.markdown("<div style='text-align:center;font-weight:700;font-size:20px;'>Predicted probability that override improves train punctuality</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='gauge-title'>"
+            "Predicted probability that override improves train punctuality"
+            "</div>",
+            unsafe_allow_html=True,
+        )
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=float(neg_ratio) * 100,
@@ -584,7 +622,7 @@ if analyze:
                 "bar": {"color": "#059669", "thickness": 0.25}
             }
         ))
-        fig.update_layout(height=420)
+        fig.update_layout(height=GAUGE_HEIGHT)
         st.plotly_chart(fig, use_container_width=True)
 
     # 可保留决策树比例
