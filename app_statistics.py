@@ -300,78 +300,144 @@ def is_feasible(f):
 
 
 # ======================
-# 指针式仪表盘（沿用两侧仪表盘样式，并叠加箭头指针）
+# 中间指针式仪表盘
+# 文字与左右两侧数字垂直对齐
+# 指针尾部距离文字上方约15px
 # ======================
-def _make_plotly_needle_gauge(value, gauge_min=-100, gauge_max=100, height=420):
+def make_pointer_gauge(
+    value,
+    gauge_min=-100,
+    gauge_max=100,
+    height=GAUGE_HEIGHT
+):
     value = float(value)
+
     value_fraction = (value - gauge_min) / (gauge_max - gauge_min)
     value_fraction = max(0.0, min(1.0, value_fraction))
+
     needle_angle = np.pi * (1 - value_fraction)
 
+    tick_values = np.linspace(gauge_min, gauge_max, 5)
+
     fig = go.Figure(go.Indicator(
-        mode="gauge+number",
+        mode="gauge",
         value=value,
-        number={
-            "suffix": " seconds per train section",
-            "valueformat": ".2f",
-            "font": {"size": 20},
-        },
         gauge={
             "shape": "angular",
             "axis": {
                 "range": [gauge_min, gauge_max],
+                "tickvals": tick_values,
+                "ticktext": [
+                    f"{tick_value:.0f}"
+                    for tick_value in tick_values
+                ],
                 "tickfont": {"size": 16},
                 "showticklabels": True,
             },
-            "bar": {"color": "rgba(0,0,0,0)", "thickness": 0},
+            "bar": {
+                "color": "rgba(0,0,0,0)",
+                "thickness": 0
+            },
         },
     ))
 
-    # Plotly 的角度仪表盘没有原生指针，因此用图形坐标叠加一个箭头。
-    center_x, center_y = 0.5, 0.28
-    radius_x, radius_y = 0.347, 0.39
+    # ======================
+    # 指针位置
+    # ======================
+    center_x = 0.5
+    center_y = 0.32
+
+    radius_x = 0.24
+    radius_y = 0.34
+
     tip_x = center_x + radius_x * np.cos(needle_angle)
     tip_y = center_y + radius_y * np.sin(needle_angle)
-    tail_x = center_x
-    tail_y = center_y
 
-    head_length_x = 0.12 * radius_x
-    head_length_y = 0.12 * radius_y
-    head_width_x = 0.055 * radius_x
-    head_width_y = 0.055 * radius_y
-    base_x = tip_x - head_length_x * np.cos(needle_angle)
-    base_y = tip_y - head_length_y * np.sin(needle_angle)
+    # 指针尾部：距离文字上方约15px
+    tail_x = 0.5
+    tail_y = 0.216
+
+    # 指针箭头尺寸
+    head_length = 0.045
+    head_width = 0.018
+
+    base_x = tip_x - head_length * np.cos(needle_angle)
+    base_y = tip_y - head_length * np.sin(needle_angle)
+
     perpendicular_x = -np.sin(needle_angle)
     perpendicular_y = np.cos(needle_angle)
 
+    # 指针主体
     fig.add_shape(
         type="path",
-        path=f"M {tail_x:.6f},{tail_y:.6f} L {tip_x:.6f},{tip_y:.6f}",
-        line={"color": "#2563eb", "width": 3},
+        path=(
+            f"M {tail_x:.6f},{tail_y:.6f} "
+            f"L {tip_x:.6f},{tip_y:.6f}"
+        ),
+        line={
+            "color": "#2563eb",
+            "width": 3
+        },
         layer="above",
         xref="paper",
         yref="paper",
     )
+
+    # 指针箭头
     fig.add_shape(
         type="path",
         path=(
             f"M {tip_x:.6f},{tip_y:.6f} "
-            f"L {base_x + head_width_x * perpendicular_x:.6f},"
-            f"{base_y + head_width_y * perpendicular_y:.6f} "
-            f"L {base_x - head_width_x * perpendicular_x:.6f},"
-            f"{base_y - head_width_y * perpendicular_y:.6f} Z"
+            f"L {base_x + head_width * perpendicular_x:.6f},"
+            f"{base_y + head_width * perpendicular_y:.6f} "
+            f"L {base_x - head_width * perpendicular_x:.6f},"
+            f"{base_y - head_width * perpendicular_y:.6f} Z"
         ),
         fillcolor="#2563eb",
-        line={"color": "#2563eb", "width": 1},
+        line={
+            "color": "#2563eb",
+            "width": 1
+        },
         layer="above",
         xref="paper",
         yref="paper",
     )
 
+    # ======================
+    # 中间文字
+    # 与左右两侧仪表盘数字垂直对齐
+    # ======================
+    fig.add_annotation(
+        x=0.5,
+        y=0.18,
+        xref="paper",
+        yref="paper",
+        text=f"<b>{value:.2f}</b> seconds per train section",
+        showarrow=False,
+        align="center",
+        xanchor="center",
+        yanchor="middle",
+        font={
+            "size": 15,
+            "color": "#374151"
+        },
+    )
+
+    # ======================
+    # 布局
+    # ======================
     fig.update_layout(
         height=height,
-        margin={"l": 20, "r": 20, "t": 20, "b": 20},
+        margin={
+            "l": 20,
+            "r": 20,
+            "t": 20,
+            "b": 20
+        },
+        plot_bgcolor="white",
+        paper_bgcolor="white",
     )
+
     return fig
 
 
