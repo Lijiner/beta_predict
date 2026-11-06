@@ -406,7 +406,7 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
     radius_x, radius_y = 0.24, 0.34
     tip_x = center_x + radius_x * np.cos(needle_angle)
     tip_y = center_y + radius_y * np.sin(needle_angle)
-    tail_x, tail_y = center_x, 0.54
+    tail_x, tail_y = center_x, 0.41
     head_length = 0.045
     head_width = 0.018
     base_x = tip_x - head_length * np.cos(needle_angle)
@@ -439,17 +439,14 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=GAUGE_HEIGHT
     )
     fig.add_annotation(
         x=0.5,
-        y=0.43,
+        y=0.312,
         xref="paper",
         yref="paper",
-        text=(
-            f"<b>{value:.2f}</b><br>"
-            "<span style='font-size:13px'>seconds per train section</span>"
-        ),
+        text=f"<b>{value:.2f}</b> seconds per train section",
         showarrow=False,
         align="center",
-        yanchor="top",
-        font={"size": 20, "color": "#374151"},
+        yanchor="middle",
+        font={"size": 15, "color": "#374151"},
     )
 
     fig.update_layout(
