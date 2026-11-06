@@ -393,8 +393,11 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=420):
             1.08 * np.sin(angle),
             None,
         ])
-        tick_text_x.append(1.17 * np.cos(angle))
-        tick_text_y.append(1.17 * np.sin(angle))
+        label_x = 1.01 * np.cos(angle)
+        if abs(np.cos(angle)) > 0.9:
+            label_x = 0.96 * np.sign(np.cos(angle))
+        tick_text_x.append(label_x)
+        tick_text_y.append(1.01 * np.sin(angle))
         tick_text.append(f"{tick_value:.0f}")
 
     fig.add_trace(go.Scatter(
@@ -415,7 +418,7 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=420):
         showlegend=False,
     ))
 
-    tail_x, tail_y = 0.0, -0.10
+    tail_x, tail_y = 0.0, -0.04
     tip_radius = inner_radius - 0.08
     tip_x = tip_radius * np.cos(needle_angle)
     tip_y = tip_radius * np.sin(needle_angle)
@@ -451,7 +454,7 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=420):
     )
     fig.add_annotation(
         x=0,
-        y=-0.28,
+        y=-0.19,
         xref="x",
         yref="y",
         text=f"{value:.2f} seconds per train section",
@@ -461,15 +464,15 @@ def make_pointer_gauge(value, gauge_min=-100, gauge_max=100, height=420):
 
     fig.update_layout(
         height=height,
-        margin={"l": 10, "r": 10, "t": 10, "b": 10},
+        margin={"l": 0, "r": 0, "t": 0, "b": 0},
         xaxis={
             "visible": False,
-            "range": [-1.35, 1.35],
+            "range": [-1.43, 1.43],
             "fixedrange": True,
         },
         yaxis={
             "visible": False,
-            "range": [-0.45, 1.15],
+            "range": [-0.21, 1.32],
             "fixedrange": True,
             "scaleanchor": "x",
             "scaleratio": 1,
